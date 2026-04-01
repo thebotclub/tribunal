@@ -1,8 +1,10 @@
 # Tribunal
 
-**Enterprise-grade discipline for Claude Code.**
+**Enterprise-grade discipline for Claude Code.** v1.1.0
 
-Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol. It includes an MCP server, review agents, cost governance, memory injection, and enterprise fleet tools.
+Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol. It includes a fail-closed safety gate, lifecycle hooks for all 13 event types, multi-agent governance, an MCP server, review agents, cost governance, memory injection, and enterprise fleet tools.
+
+> 21 modules · 371 tests · 21+ CLI commands
 
 ## Quick Start
 
@@ -22,12 +24,17 @@ This generates:
 |---------|-----|
 | **TDD enforcement** | Blocks file edits unless tests exist first |
 | **Secret scanning** | Prevents hardcoded credentials in code |
-| **Audit trail** | Logs every tool call to `.tribunal/audit.jsonl` |
-| **Cost budgets** | Enforce per-session and daily spending limits |
+| **Fail-closed gate** | Blocks on errors by default — never fails open silently |
+| **Audit trail** | Logs every tool call with automatic log rotation at 10 MB |
+| **Atomic I/O** | File locking + atomic writes prevent concurrent session corruption |
+| **Config validation** | Schema validation catches misconfigs on load |
+| **Cost budgets** | Per-session and daily budgets with analytics and anomaly detection |
+| **Hook lifecycle** | 13 event handlers — sessions, failures, files, permissions, compaction |
+| **Multi-agent governance** | Per-agent budgets, max concurrency, shared session budget, agent tree |
 | **Review agents** | 4 parallel agents (TDD, security, quality, spec) |
-| **MCP server** | Expose rules/audit as MCP tools for other agents |
+| **MCP server** | Expose rules/audit as MCP tools for multi-agent workflows |
 | **Skills system** | 5 bundled skills + custom skill support |
-| **Memory injection** | Write rules into Claude Code's memory system |
+| **Memory injection** | Rules into Claude's memory with 200-file limit and LRU eviction |
 | **Model routing** | Cost-aware routing between models |
 | **Air-gapped bundles** | Package config for offline deployment |
 | **Audit dashboard** | HTML report + terminal stats for audit data |
@@ -100,6 +107,9 @@ tribunal bundle validate bundle.json  # Validate bundle file
 # Dashboard
 tribunal dashboard       # Show audit stats in terminal
 tribunal dashboard html  # Export HTML audit report
+
+# Multi-Agent Governance
+tribunal agents tree     # Show agent tree with costs
 ```
 
 ## Rule Format
@@ -159,9 +169,49 @@ rules:
 Tribunal plugs into Claude Code's [hook system](https://docs.anthropic.com/en/docs/claude-code/hooks):
 
 1. **`tribunal init`** writes hook config to `.claude/claudeconfig.json`
-2. Claude Code calls `tribunal-gate` on every tool use
-3. The gate reads the hook event (JSON on stdin), evaluates rules, and responds
-4. Results are logged to `.tribunal/audit.jsonl`
+2. Claude Code calls `tribunal-gate` on every tool use and lifecycle event
+3. The gate reads the hook event (JSON on stdin), routes lifecycle hooks, evaluates rules, and responds
+4. Results are logged to `.tribunal/audit.jsonl` (auto-rotated at 10 MB)
+
+The gate is **fail-closed by default** — if anything goes wrong parsing the event or evaluating rules, the tool call is blocked (exit code 2). Set `TRIBUNAL_FAIL_MODE=open` to override.
+
+## Hook Lifecycle
+
+Tribunal handles 13 lifecycle event types beyond rule evaluation:
+
+| Event | Handler |
+|-------|---------|
+| `SessionEnd` | Flush analytics, finalize cost, write session summary |
+| `PostToolUseFailure` | Track tool failure rates, detect flaky patterns |
+| `FileChanged` | Monitor external file changes in real time |
+| `CwdChanged` | Detect project context switches, reload rules |
+| `ConfigChange` | Alert on unauthorized settings modifications |
+| `PermissionRequest` | Log what was requested and why |
+| `PermissionDenied` | Track denied actions for compliance |
+| `PreCompact` | Save critical state before context compaction |
+| `PostCompact` | Re-inject rules after compaction |
+| `SubagentStart` / `SubagentStop` | Track sub-agent lifecycle |
+| `TaskCreated` / `TaskCompleted` | Task-level audit |
+
+All hooks are registered automatically by `tribunal init`.
+
+## Multi-Agent Governance
+
+Enforce policies across Claude Code coordinator mode — main agent + sub-agents:
+
+```yaml
+# .tribunal/config.yaml
+multi_agent:
+  max_concurrent_agents: 3
+  per_agent_budget: 1.00       # $1 per sub-agent
+  shared_session_budget: 5.00  # $5 total across all agents
+```
+
+```bash
+tribunal agents tree    # Show active/completed agents with costs
+```
+
+Per-agent cost budgets, max concurrency limits, and shared session budgets are enforced on every tool call.
 
 ## MCP Server
 
