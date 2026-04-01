@@ -17,6 +17,10 @@ Commands:
   tribunal managed      Show managed policy status
   tribunal model        Model routing configuration
   tribunal marketplace  Rule marketplace management
+  tribunal memory       Memory injection management
+  tribunal analytics    Cost analytics and trends
+  tribunal bundle       Air-gapped bundle management
+  tribunal dashboard    Audit dashboard report
 """
 
 from __future__ import annotations
@@ -632,6 +636,126 @@ def cmd_marketplace(args: argparse.Namespace) -> int:
         return 0
 
 
+# ── Memory Command ────────────────────────────────────────────────────────────
+
+
+def cmd_memory(args: argparse.Namespace) -> int:
+    """Memory injection management."""
+    from .memory import (
+        clear_tribunal_memories,
+        format_memory_status,
+        inject_rules_as_memory,
+        inject_session_summary,
+    )
+
+    sub = getattr(args, "mem_command", None)
+
+    if sub == "inject":
+        cwd = str(Path.cwd())
+        entries = inject_rules_as_memory(cwd)
+        print(f"  ✓ Injected {len(entries)} rules as memory entries")
+        return 0
+    elif sub == "summary":
+        text = getattr(args, "text", "") or ""
+        path = inject_session_summary(str(Path.cwd()), text or "Session completed")
+        print(f"  ✓ Session summary written to {path.name}")
+        return 0
+    elif sub == "list":
+        print(format_memory_status(str(Path.cwd())))
+        return 0
+    elif sub == "clear":
+        removed = clear_tribunal_memories(str(Path.cwd()))
+        print(f"  ✓ Removed {removed} tribunal memory entries")
+        return 0
+    else:
+        print(format_memory_status(str(Path.cwd())))
+        return 0
+
+
+# ── Analytics Command ─────────────────────────────────────────────────────────
+
+
+def cmd_analytics(args: argparse.Namespace) -> int:
+    """Cost analytics and trends."""
+    from .analytics import analyze_costs, format_analytics
+
+    analytics = analyze_costs(str(Path.cwd()))
+
+    if getattr(args, "json_output", False):
+        print(json.dumps(analytics.to_dict(), indent=2))
+    else:
+        print(format_analytics(analytics))
+
+    return 0
+
+
+# ── Bundle Command ────────────────────────────────────────────────────────────
+
+
+def cmd_bundle(args: argparse.Namespace) -> int:
+    """Air-gapped bundle management."""
+    from .airgap import export_bundle, import_bundle, validate_bundle
+
+    sub = getattr(args, "bundle_command", None)
+
+    if sub == "export":
+        output = getattr(args, "output", None)
+        path = export_bundle(str(Path.cwd()), output=output)
+        print(f"  ✓ Bundle exported to {path}")
+        return 0
+    elif sub == "import":
+        source = getattr(args, "file", None)
+        if not source:
+            print("  ✗ Specify a bundle file to import.")
+            return 1
+        ok, errors = validate_bundle(source)
+        if not ok:
+            for e in errors:
+                print(f"  ✗ {e}")
+            return 1
+        counts = import_bundle(source, str(Path.cwd()))
+        for kind, n in counts.items():
+            if n > 0:
+                print(f"  ✓ Imported {n} {kind}")
+        return 0
+    elif sub == "validate":
+        source = getattr(args, "file", None)
+        if not source:
+            print("  ✗ Specify a bundle file to validate.")
+            return 1
+        ok, errors = validate_bundle(source)
+        if ok:
+            print("  ✓ Bundle is valid")
+        else:
+            for e in errors:
+                print(f"  ✗ {e}")
+        return 0 if ok else 1
+    else:
+        print("  Usage: tribunal bundle export|import|validate")
+        return 0
+
+
+# ── Dashboard Command ─────────────────────────────────────────────────────────
+
+
+def cmd_dashboard(args: argparse.Namespace) -> int:
+    """Audit dashboard report."""
+    from .dashboard import export_html_report, format_stats, compute_stats, load_audit_events
+
+    sub = getattr(args, "dash_command", None)
+
+    if sub == "html":
+        output = getattr(args, "output", None)
+        path = export_html_report(str(Path.cwd()), output=output)
+        print(f"  ✓ Dashboard exported to {path}")
+        return 0
+    else:
+        events = load_audit_events(str(Path.cwd()))
+        stats = compute_stats(events)
+        print(format_stats(stats))
+        return 0
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 
@@ -738,6 +862,36 @@ def main() -> None:
     rem_p = market_sub.add_parser("remove", help="Remove a bundle from marketplace")
     rem_p.add_argument("name", help="Bundle name to remove")
 
+    # memory
+    mem_p = sub.add_parser("memory", help="Memory injection management")
+    mem_sub = mem_p.add_subparsers(dest="mem_command")
+    mem_sub.add_parser("inject", help="Inject rules into Claude memory")
+    summary_p = mem_sub.add_parser("summary", help="Write session summary to memory")
+    summary_p.add_argument("text", nargs="?", default="", help="Summary text")
+    mem_sub.add_parser("list", help="List tribunal memory entries")
+    mem_sub.add_parser("clear", help="Clear tribunal memory entries")
+
+    # analytics
+    analytics_p = sub.add_parser("analytics", help="Cost analytics and trends")
+    analytics_p.add_argument("--json", dest="json_output", action="store_true", help="Output JSON")
+
+    # bundle (air-gapped)
+    bundle_p = sub.add_parser("bundle", help="Air-gapped bundle management")
+    bundle_sub = bundle_p.add_subparsers(dest="bundle_command")
+    bex_p = bundle_sub.add_parser("export", help="Export air-gapped bundle")
+    bex_p.add_argument("--output", "-o", default=None, help="Output file")
+    bim_p = bundle_sub.add_parser("import", help="Import air-gapped bundle")
+    bim_p.add_argument("file", help="Bundle JSON file to import")
+    bval_p = bundle_sub.add_parser("validate", help="Validate a bundle file")
+    bval_p.add_argument("file", help="Bundle JSON file to validate")
+
+    # dashboard
+    dash_p = sub.add_parser("dashboard", help="Audit dashboard")
+    dash_sub = dash_p.add_subparsers(dest="dash_command")
+    dash_sub.add_parser("show", help="Show audit stats in terminal")
+    html_p = dash_sub.add_parser("html", help="Export HTML audit report")
+    html_p.add_argument("--output", "-o", default=None, help="Output file")
+
     args = parser.parse_args()
 
     commands = {
@@ -756,6 +910,10 @@ def main() -> None:
         "managed": cmd_managed,
         "model": cmd_model,
         "marketplace": cmd_marketplace,
+        "memory": cmd_memory,
+        "analytics": cmd_analytics,
+        "bundle": cmd_bundle,
+        "dashboard": cmd_dashboard,
     }
 
     if args.command == "mcp-serve":
