@@ -9,6 +9,7 @@ from __future__ import annotations
 import fnmatch
 import os
 import re
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -322,7 +323,9 @@ def _condition_run_command(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return True, f"Command timed out after 30s: {rule.run}"
     except FileNotFoundError:
-        return False, ""  # Command not installed — skip gracefully
+        cmd_name = rule.run.split()[0] if rule.run else "unknown"
+        sys.stderr.write(f"tribunal: WARNING: command '{cmd_name}' not found for rule '{rule.name}'\n")
+        return False, ""
 
 
 def _condition_no_matching_test_ts(rule: Rule, event: HookEvent) -> tuple[bool, str]:
@@ -389,7 +392,10 @@ def _condition_type_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
                 output = output[:500] + "\n... (truncated)"
             return True, f"TypeScript errors:\n{output}"
         return False, ""
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except subprocess.TimeoutExpired:
+        return True, "TypeScript type-check timed out after 60s"
+    except FileNotFoundError:
+        sys.stderr.write("tribunal: WARNING: 'npx tsc' not found — type-check rule skipped\n")
         return False, ""
 
 
@@ -423,7 +429,11 @@ def _condition_lint_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
                 output = output[:500] + "\n... (truncated)"
             return True, f"Lint errors:\n{output}"
         return False, ""
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except subprocess.TimeoutExpired:
+        return True, "Lint check timed out after 30s"
+    except FileNotFoundError:
+        linter = "eslint" if file_path.endswith((".ts", ".tsx", ".js", ".jsx")) else "ruff"
+        sys.stderr.write(f"tribunal: WARNING: '{linter}' not found — lint-check rule skipped\n")
         return False, ""
 
 
@@ -450,7 +460,10 @@ def _condition_mypy_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
                 output = output[:500] + "\n... (truncated)"
             return True, f"mypy errors:\n{output}"
         return False, ""
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except subprocess.TimeoutExpired:
+        return True, "mypy check timed out after 60s"
+    except FileNotFoundError:
+        sys.stderr.write("tribunal: WARNING: 'mypy' not found — mypy-check rule skipped\n")
         return False, ""
 
 

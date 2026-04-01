@@ -5,18 +5,23 @@ Claude Code's memory system uses markdown files with YAML frontmatter stored in
 learnings so they surface contextually in future sessions.
 
 Memory types: pattern, warning, gotcha, reference, session-log
-Limit: 200 files, 25KB per entry
+Limit: 200 files, 25KB per entry (enforced)
 """
 
 from __future__ import annotations
 
 import os
+import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+# Claude Code memory limits
+MAX_MEMORY_FILES = 200
+MAX_ENTRY_BYTES = 25_000  # 25KB
 
 
 @dataclass
@@ -56,8 +61,34 @@ def _memory_dir(cwd: str) -> Path:
     return Path(cwd) / ".claude" / "memory"
 
 
+def _memory_file_count(mem_dir: Path) -> int:
+    """Count existing memory files (all .md files, not just tribunal's)."""
+    if not mem_dir.is_dir():
+        return 0
+    return sum(1 for f in mem_dir.iterdir() if f.suffix == ".md")
+
+
+def _evict_oldest_tribunal_memory(mem_dir: Path) -> bool:
+    """Remove the oldest Tribunal memory file to make room. Returns True if evicted."""
+    if not mem_dir.is_dir():
+        return False
+    tribunal_files = sorted(
+        (f for f in mem_dir.iterdir() if f.name.startswith("tribunal-") and f.suffix == ".md"),
+        key=lambda f: f.stat().st_mtime,
+    )
+    if tribunal_files:
+        tribunal_files[0].unlink()
+        return True
+    return False
+
+
 def inject_memory(cwd: str, entry: MemoryEntry, filename: str | None = None) -> Path:
     """Write a memory entry to Claude Code's memory directory.
+
+    Enforces Claude Code's limits:
+    - Max 200 memory files in .claude/memory/
+    - Max 25KB per entry
+    If at capacity, evicts the oldest Tribunal memory to make room.
 
     Returns the path of the written memory file.
     """
@@ -70,8 +101,30 @@ def inject_memory(cwd: str, entry: MemoryEntry, filename: str | None = None) -> 
         safe_title = "".join(c for c in safe_title if c.isalnum() or c == "-")
         filename = f"tribunal-{safe_title}.md"
 
+    content = entry.to_markdown()
+
+    # Enforce size limit
+    if len(content.encode("utf-8")) > MAX_ENTRY_BYTES:
+        # Truncate content to fit
+        while len(content.encode("utf-8")) > MAX_ENTRY_BYTES:
+            content = content[:len(content) - 200]
+        content += "\n\n*(truncated to fit 25KB limit)*\n"
+        sys.stderr.write(f"tribunal: memory entry '{entry.title}' truncated to fit 25KB limit\n")
+
     path = mem_dir / filename
-    path.write_text(entry.to_markdown())
+
+    # Enforce file count limit (only for new files)
+    if not path.exists():
+        count = _memory_file_count(mem_dir)
+        if count >= MAX_MEMORY_FILES:
+            if not _evict_oldest_tribunal_memory(mem_dir):
+                sys.stderr.write(
+                    f"tribunal: memory at capacity ({MAX_MEMORY_FILES} files), "
+                    f"cannot inject '{entry.title}'\n"
+                )
+                return path
+
+    path.write_text(content)
     return path
 
 

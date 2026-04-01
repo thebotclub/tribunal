@@ -39,20 +39,16 @@ class CostBudget:
 
 def load_state(cwd: str) -> dict[str, Any]:
     """Load .tribunal/state.json from the project directory."""
-    state_path = os.path.join(cwd, ".tribunal", "state.json")
-    if not os.path.exists(state_path):
-        return {}
-    with open(state_path) as f:
-        return json.load(f)
+    from .io import locked_read_json
+    state_path = Path(os.path.join(cwd, ".tribunal", "state.json"))
+    return locked_read_json(state_path)
 
 
 def save_state(cwd: str, state: dict[str, Any]) -> None:
-    """Save state to .tribunal/state.json."""
-    state_dir = os.path.join(cwd, ".tribunal")
-    os.makedirs(state_dir, exist_ok=True)
-    state_path = os.path.join(state_dir, "state.json")
-    with open(state_path, "w") as f:
-        json.dump(state, f, indent=2)
+    """Save state to .tribunal/state.json (atomic write with locking)."""
+    from .io import atomic_write_json
+    state_path = Path(os.path.join(cwd, ".tribunal", "state.json"))
+    atomic_write_json(state_path, state)
 
 
 def get_cost_snapshot(cwd: str) -> CostSnapshot:

@@ -13,6 +13,7 @@ Resolution order (later overrides earlier):
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -59,6 +60,100 @@ def _load_yaml_config(path: Path) -> dict[str, Any]:
             return yaml.safe_load(f) or {}
     except (yaml.YAMLError, OSError):
         return {}
+
+
+# ── Config Schema Validation ──────────────────────────────────────────────────
+
+# Known top-level keys and their expected types
+_KNOWN_KEYS: dict[str, type | tuple[type, ...]] = {
+    "budget": dict,
+    "audit": dict,
+    "skills_dirs": list,
+    "permission_preset": str,
+    "review_agents": list,
+    "mcp_enabled": bool,
+    "features": dict,
+    "rules": dict,
+    "model_routing": dict,
+    "managed": dict,
+    "multi_agent": dict,
+}
+
+_KNOWN_BUDGET_KEYS = {"session_usd", "daily_usd", "warn_percent"}
+_KNOWN_AUDIT_KEYS = {"enabled", "path", "max_bytes", "keep_rotated"}
+_VALID_ACTIONS = {"block", "warn", "log"}
+_VALID_TRIGGERS = {"PreToolUse", "PostToolUse", "SessionStart", "SessionEnd",
+                   "SubagentStart", "SubagentStop", "FileChanged", "CwdChanged",
+                   "PermissionRequest", "PermissionDenied", "ConfigChange",
+                   "TaskCreated", "TaskCompleted", "PreCompact", "PostCompact"}
+
+
+def validate_config(data: dict[str, Any]) -> list[str]:
+    """Validate config dict against the Tribunal schema.
+
+    Returns list of validation error/warning strings. Empty = valid.
+    """
+    errors: list[str] = []
+
+    if not isinstance(data, dict):
+        return ["Config must be a YAML mapping"]
+
+    # Check for unknown top-level keys
+    for key in data:
+        if key not in _KNOWN_KEYS:
+            errors.append(f"Unknown config key: '{key}'")
+
+    # Validate budget section
+    if "budget" in data:
+        b = data["budget"]
+        if not isinstance(b, dict):
+            errors.append("'budget' must be a mapping")
+        else:
+            for k in b:
+                if k not in _KNOWN_BUDGET_KEYS:
+                    errors.append(f"Unknown budget key: '{k}'")
+            for k in ("session_usd", "daily_usd", "warn_percent"):
+                if k in b and not isinstance(b[k], (int, float)):
+                    errors.append(f"budget.{k} must be a number")
+
+    # Validate audit section
+    if "audit" in data:
+        a = data["audit"]
+        if not isinstance(a, dict):
+            errors.append("'audit' must be a mapping")
+        else:
+            for k in a:
+                if k not in _KNOWN_AUDIT_KEYS:
+                    errors.append(f"Unknown audit key: '{k}'")
+
+    # Validate rules section
+    if "rules" in data:
+        rules = data["rules"]
+        if not isinstance(rules, dict):
+            errors.append("'rules' must be a mapping")
+        else:
+            for name, rdef in rules.items():
+                if not isinstance(rdef, dict):
+                    errors.append(f"Rule '{name}' must be a mapping")
+                    continue
+                action = rdef.get("action", "block")
+                if action not in _VALID_ACTIONS:
+                    errors.append(f"Rule '{name}': invalid action '{action}' (expected: {_VALID_ACTIONS})")
+                trigger = rdef.get("trigger", "")
+                if trigger and trigger not in _VALID_TRIGGERS:
+                    errors.append(f"Rule '{name}': unknown trigger '{trigger}'")
+
+    # Validate features section
+    if "features" in data:
+        features = data["features"]
+        if not isinstance(features, dict):
+            errors.append("'features' must be a mapping")
+        else:
+            for k, v in features.items():
+                if not isinstance(v, bool):
+                    errors.append(f"Feature '{k}' must be true or false")
+
+    return errors
 
 
 def _apply_config(base: TribunalConfig, data: dict[str, Any]) -> TribunalConfig:
@@ -129,6 +224,10 @@ def resolve_config(cwd: str | None = None) -> TribunalConfig:
     project_config_path = project_dir / ".tribunal" / "config.yaml"
     project_data = _load_yaml_config(project_config_path)
     if project_data:
+        # Validate and warn on issues
+        errors = validate_config(project_data)
+        for err in errors:
+            sys.stderr.write(f"tribunal: config warning: {err}\n")
         config = _apply_config(config, project_data)
 
     # 3. Check for project rules file

@@ -58,6 +58,36 @@ _CLAUDE_CONFIG = {
                 "run": [{"command": "tribunal-gate"}],
             }
         ],
+        "SessionEnd": [
+            {
+                "run": [{"command": "tribunal-gate"}],
+            }
+        ],
+        "PostToolUseFailure": [
+            {
+                "run": [{"command": "tribunal-gate"}],
+            }
+        ],
+        "FileChanged": [
+            {
+                "run": [{"command": "tribunal-gate"}],
+            }
+        ],
+        "CwdChanged": [
+            {
+                "run": [{"command": "tribunal-gate"}],
+            }
+        ],
+        "SubagentStart": [
+            {
+                "run": [{"command": "tribunal-gate"}],
+            }
+        ],
+        "SubagentStop": [
+            {
+                "run": [{"command": "tribunal-gate"}],
+            }
+        ],
     }
 }
 
@@ -756,6 +786,18 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
         return 0
 
 
+def cmd_agents(args: argparse.Namespace) -> int:
+    """Multi-agent governance."""
+    from .agents import format_agent_tree
+
+    sub = getattr(args, "agents_command", None)
+
+    if sub == "tree" or sub is None:
+        print(format_agent_tree(str(Path.cwd())))
+        return 0
+    return 0
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 
@@ -892,6 +934,11 @@ def main() -> None:
     html_p = dash_sub.add_parser("html", help="Export HTML audit report")
     html_p.add_argument("--output", "-o", default=None, help="Output file")
 
+    # agents (multi-agent governance)
+    agents_p = sub.add_parser("agents", help="Multi-agent governance")
+    agents_sub = agents_p.add_subparsers(dest="agents_command")
+    agents_sub.add_parser("tree", help="Show agent tree with costs")
+
     args = parser.parse_args()
 
     commands = {
@@ -914,6 +961,7 @@ def main() -> None:
         "analytics": cmd_analytics,
         "bundle": cmd_bundle,
         "dashboard": cmd_dashboard,
+        "agents": cmd_agents,
     }
 
     if args.command == "mcp-serve":

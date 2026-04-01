@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tribunal"
-version = "0.7.0"
+version = "1.1.0"
 description = "Enterprise-grade discipline for Claude Code — TDD enforcement, quality gates, and team standards."
 readme = "README.md"
 license = "MIT"
@@ -26,6 +26,12 @@ dependencies = [
     "pyyaml>=6.0",
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.8",
+]
+
 [project.urls]
 Homepage = "https://tribunal.dev"
 Repository = "https://github.com/thebotclub/tribunal"
@@ -38,6 +44,7 @@ tribunal-mcp = "tribunal.mcp_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tribunal"]
+artifacts = ["src/tribunal/py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

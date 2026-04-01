@@ -37,20 +37,27 @@ def _registry_path() -> Path:
 
 def _load_registry() -> list[dict[str, Any]]:
     """Load the marketplace registry."""
+    from .io import locked_read_json
     path = _registry_path()
+    data = locked_read_json(path)
+    # Registry is stored as a list wrapped in a dict for atomic_write_json compat
+    if isinstance(data, dict) and "entries" in data:
+        return data["entries"]
+    # Fallback: read raw JSON list (legacy format)
     if not path.is_file():
         return []
     try:
-        return json.loads(path.read_text())
+        raw = json.loads(path.read_text())
+        return raw if isinstance(raw, list) else []
     except (json.JSONDecodeError, OSError):
         return []
 
 
 def _save_registry(entries: list[dict[str, Any]]) -> None:
-    """Save the marketplace registry."""
+    """Save the marketplace registry (atomic write with locking)."""
+    from .io import atomic_write_json
     path = _registry_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(entries, indent=2) + "\n")
+    atomic_write_json(path, {"entries": entries})
 
 
 def list_marketplace(tags: list[str] | None = None) -> list[MarketplaceEntry]:
