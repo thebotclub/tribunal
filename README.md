@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# tribunal.dev
 
-## Getting Started
+The website and Python CLI for [Tribunal](https://tribunal.dev) — enterprise-grade discipline for Claude Code.
 
-First, run the development server:
+## Repository Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+tribunal.dev/
+├── src/              # Next.js website (tribunal.dev)
+├── tribunal/         # Python CLI package
+│   ├── src/tribunal/ # Core modules (18 modules)
+│   └── tests/        # Test suite (266 tests)
+├── ROADMAP.md        # Architecture review & feature roadmap
+└── package.json      # Website dependencies
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tribunal CLI
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pip install tribunal
+tribunal init
+```
 
-## Learn More
+**20 CLI commands** covering: rules, audit, cost budgets, analytics, review agents, MCP server, skills, permissions, memory injection, air-gapped bundles, model routing, marketplace, dashboard, and enterprise fleet management.
 
-To learn more about Next.js, take a look at the following resources:
+See [tribunal/README.md](tribunal/README.md) for full documentation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Website
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The marketing site at [tribunal.dev](https://tribunal.dev) is built with Next.js and deployed on Cloudflare Pages.
 
-## Deploy on Vercel
+```bash
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # Production build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Links
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Website:** [tribunal.dev](https://tribunal.dev)
+- **PyPI:** [pypi.org/project/tribunal](https://pypi.org/project/tribunal/)
+- **GitHub:** [github.com/thebotclub/tribunal.dev](https://github.com/thebotclub/tribunal.dev)
+
+## License
+
+MIT

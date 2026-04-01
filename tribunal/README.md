@@ -2,7 +2,7 @@
 
 **Enterprise-grade discipline for Claude Code.**
 
-Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol.
+Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol. It includes an MCP server, review agents, cost governance, memory injection, and enterprise fleet tools.
 
 ## Quick Start
 
@@ -23,25 +23,83 @@ This generates:
 | **TDD enforcement** | Blocks file edits unless tests exist first |
 | **Secret scanning** | Prevents hardcoded credentials in code |
 | **Audit trail** | Logs every tool call to `.tribunal/audit.jsonl` |
-| **Custom rules** | Define your own in `.tribunal/rules.yaml` |
+| **Cost budgets** | Enforce per-session and daily spending limits |
+| **Review agents** | 4 parallel agents (TDD, security, quality, spec) |
+| **MCP server** | Expose rules/audit as MCP tools for other agents |
+| **Skills system** | 5 bundled skills + custom skill support |
+| **Memory injection** | Write rules into Claude Code's memory system |
+| **Model routing** | Cost-aware routing between models |
+| **Air-gapped bundles** | Package config for offline deployment |
+| **Audit dashboard** | HTML report + terminal stats for audit data |
+| **Marketplace** | Share and discover community rule bundles |
+| **Enterprise managed** | Fleet policies via `/etc/tribunal/config.yaml` |
 
 ## Commands
 
 ```bash
+# Foundation
 tribunal init            # Set up hooks in current project
 tribunal status          # Show active rules and audit summary
 tribunal rules           # List all rules and their config
 tribunal audit           # View recent audit log entries
 tribunal audit -n 50     # Show last 50 entries
+
+# Cost Management
 tribunal cost            # Show cost report
 tribunal cost budget 5   # Set $5 per-session budget
 tribunal cost budget 20 --daily  # Set $20 daily budget
 tribunal cost reset      # Reset session counters
+tribunal analytics       # Cost trends and anomaly detection
+tribunal analytics --json  # Machine-readable output
+
+# Skills & Permissions
 tribunal skills list     # List available skills
 tribunal skills install tdd-cycle  # Install a bundled skill
 tribunal skills create my-flow     # Create a custom skill
 tribunal permissions show          # List permission presets
 tribunal permissions apply strict  # Apply strict permissions
+
+# Review & Reports
+tribunal review          # Run all 4 review agents
+tribunal review --agents tdd,security  # Run specific agents
+tribunal report          # Text report for CI/CD
+tribunal report --format json  # JSON report for CI/CD
+
+# Configuration
+tribunal config          # Show resolved config (4-level cascade)
+tribunal plugin show     # Show plugin manifest
+tribunal plugin install  # Write manifest to .tribunal/
+
+# MCP Server
+tribunal mcp-serve       # Start MCP server (stdin/stdout)
+
+# Team & Enterprise
+tribunal sync export     # Export rules to YAML bundle
+tribunal sync import rules.yaml  # Import rules from bundle
+tribunal managed         # Show managed policy status
+tribunal model           # Show model routing config
+tribunal model resolve FileEdit  # Resolve model for a tool
+
+# Marketplace
+tribunal marketplace list       # List marketplace bundles
+tribunal marketplace register bundle.yaml  # Register a bundle
+tribunal marketplace install my-rules     # Install from marketplace
+tribunal marketplace remove my-rules      # Remove from marketplace
+
+# Memory
+tribunal memory list     # List tribunal memory entries
+tribunal memory inject   # Inject rules into Claude memory
+tribunal memory summary "Session done"  # Write session summary
+tribunal memory clear    # Clear tribunal memory entries
+
+# Air-Gapped Bundles
+tribunal bundle export   # Export self-contained bundle
+tribunal bundle import bundle.json  # Import bundle
+tribunal bundle validate bundle.json  # Validate bundle file
+
+# Dashboard
+tribunal dashboard       # Show audit stats in terminal
+tribunal dashboard html  # Export HTML audit report
 ```
 
 ## Rule Format
@@ -66,6 +124,15 @@ rules:
     action: block
     condition: contains-secret
     message: "Possible secret detected. Use environment variables."
+
+  type-safety:
+    trigger: PostToolUse
+    match:
+      tool: FileEdit
+      path: "**/*.ts"
+    run: "npx tsc --noEmit --pretty"
+    action: block
+    message: "TypeScript errors found"
 ```
 
 ### Built-in Conditions
@@ -80,22 +147,6 @@ rules:
 | `lint-check` | Runs eslint (JS/TS) or ruff (Python) on changed files |
 | `mypy-check` | Runs mypy on Python files |
 | `run-command` | Runs a custom shell command via `rule.run` |
-
-### Custom Shell Commands
-
-Run any command as a gate — block on non-zero exit:
-
-```yaml
-rules:
-  type-safety:
-    trigger: PostToolUse
-    match:
-      tool: FileEdit
-      path: "**/*.ts"
-    run: "npx tsc --noEmit --pretty"
-    action: block
-    message: "TypeScript errors found"
-```
 
 ### Actions
 
@@ -112,21 +163,52 @@ Tribunal plugs into Claude Code's [hook system](https://docs.anthropic.com/en/do
 3. The gate reads the hook event (JSON on stdin), evaluates rules, and responds
 4. Results are logged to `.tribunal/audit.jsonl`
 
-## Cost Management
+## MCP Server
 
-Set budgets to prevent runaway spending:
+Tribunal exposes 6 MCP tools when running as a server:
+
+```bash
+tribunal mcp-serve  # Start JSON-RPC 2.0 server on stdin/stdout
+```
+
+Tools: `tribunal_evaluate_rule`, `tribunal_list_rules`, `tribunal_get_audit`, `tribunal_check_cost`, `tribunal_run_review`, `tribunal_get_config`
+
+## Review Agents
+
+Run 4 parallel review agents on your changed files:
+
+```bash
+tribunal review             # All agents
+tribunal review --agents tdd,security  # Specific agents
+```
+
+| Agent | Focus |
+|-------|-------|
+| `tdd` | Test coverage and TDD compliance |
+| `security` | Vulnerability detection |
+| `quality` | Code quality and maintainability |
+| `spec` | Spec conformance |
+
+## Configuration Cascade
+
+Tribunal resolves config from 4 levels (highest to lowest priority):
+
+1. **Managed** — Enterprise `/etc/tribunal/config.yaml`
+2. **User** — `~/.tribunal/config.yaml`
+3. **Project** — `.tribunal/config.yaml`
+4. **Environment** — `TRIBUNAL_*` env vars
+
+## Cost Management
 
 ```bash
 tribunal cost budget 5.00        # $5 per session
 tribunal cost budget 20 --daily  # $20 per day
-tribunal cost report             # View current costs
+tribunal analytics               # Trends and anomalies
 ```
 
 When 80% of budget is used, Tribunal warns. When exceeded, it blocks.
 
 ## Skills
-
-Tribunal ships bundled skills and supports custom ones. Skills are markdown files with YAML frontmatter that Claude Code discovers automatically.
 
 **Bundled skills:** `tdd-cycle`, `spec-review`, `security-audit`, `cost-report`, `quality-gate`
 
@@ -135,16 +217,50 @@ tribunal skills install tdd-cycle    # Install to .tribunal/skills/
 tribunal skills create my-workflow   # Create custom skill scaffold
 ```
 
-## Permission Policies
+## Memory Injection
 
-Apply security presets for Claude Code's deny/allow system:
+Inject Tribunal rules into Claude Code's memory for contextual surfacing:
 
 ```bash
-tribunal permissions show        # List presets
-tribunal permissions apply strict  # Apply strict policy
+tribunal memory inject   # Rules become memory entries
+tribunal memory summary "Fixed the auth bug"  # Session log
+```
+
+## Air-Gapped Deployment
+
+Package all rules, skills, and config into a single file for offline environments:
+
+```bash
+tribunal bundle export               # Creates .tribunal/bundle.json
+tribunal bundle import bundle.json   # Import into new project
+```
+
+## Permission Policies
+
+```bash
+tribunal permissions apply strict  # Apply strict deny/allow rules
 ```
 
 Presets: `strict` (no curl/wget/sudo/force-push), `standard` (balanced), `minimal` (basic safety).
+
+## Architecture
+
+```
+.tribunal/
+├── rules.yaml          # Rule definitions
+├── config.yaml         # Project configuration
+├── permissions.yaml    # Permission policies
+├── audit.jsonl         # Audit log (gitignored)
+├── state.json          # Cost tracking state (gitignored)
+├── skills/             # Custom skills
+└── bundle.json         # Air-gapped bundle (export)
+
+.claude/
+├── claudeconfig.json   # Hook wiring
+└── memory/             # Tribunal memory entries
+    ├── tribunal-rule-*.md
+    └── tribunal-session-*.md
+```
 
 ## License
 
