@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tribunal"
-version = "2.0.0a1"
+version = "2.0.0"
 description = "Quality gates for AI-generated code — TDD enforcement, secret scanning, and audit trails for coding agents."
 readme = "README.md"
 license = "MIT"

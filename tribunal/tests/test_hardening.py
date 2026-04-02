@@ -861,4 +861,4 @@ class TestVersion:
 
     def test_version_is_1_2_0(self):
         from tribunal import __version__
-        assert __version__ == "2.0.0a1"
+        assert __version__ == "2.0.0"
