@@ -384,6 +384,94 @@ def cmd_pack(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_ci(args: argparse.Namespace) -> int:
+    """Run quality checks on files and output results.
+
+    This is the main CI/CD entrypoint. Runs all checkers (secrets, TDD,
+    linting) and outputs results in SARIF, JSON, or text format.
+    """
+    from .checkers import CheckResult, collect_files, run_checkers
+    from .sarif import findings_to_sarif, sarif_to_json
+
+    project_root = Path(args.project) if hasattr(args, "project") and args.project else Path.cwd()
+    project_root = project_root.resolve()
+
+    # Determine files to check
+    paths = [Path(p) for p in args.files] if hasattr(args, "files") and args.files else None
+    files = collect_files(project_root, paths=paths)
+
+    if not files:
+        print("  No files to check.", file=sys.stderr)
+        return 0
+
+    # Filter checkers if specified
+    checker_names = args.checkers.split(",") if hasattr(args, "checkers") and args.checkers else None
+
+    results = run_checkers(files, project_root, checkers=checker_names)
+
+    # Count findings
+    all_findings = [f for r in results for f in r.findings]
+    errors = [f for f in all_findings if f.severity == "error"]
+    warnings = [f for f in all_findings if f.severity == "warning"]
+
+    # Output format
+    fmt = getattr(args, "format", "text")
+
+    if fmt == "sarif":
+        sarif = findings_to_sarif(results, project_root)
+        output = sarif_to_json(sarif)
+        if hasattr(args, "output") and args.output:
+            Path(args.output).write_text(output)
+            print(f"  SARIF written to {args.output}", file=sys.stderr)
+        else:
+            print(output)
+    elif fmt == "json":
+        data = {
+            "files_checked": len(files),
+            "total_findings": len(all_findings),
+            "errors": len(errors),
+            "warnings": len(warnings),
+            "findings": [
+                {
+                    "checker": f.checker,
+                    "file": f.file,
+                    "line": f.line,
+                    "severity": f.severity,
+                    "message": f.message,
+                    "rule_id": f.rule_id,
+                }
+                for f in all_findings
+            ],
+        }
+        output = json.dumps(data, indent=2)
+        if hasattr(args, "output") and args.output:
+            Path(args.output).write_text(output)
+            print(f"  JSON written to {args.output}", file=sys.stderr)
+        else:
+            print(output)
+    else:
+        # Text format
+        print(f"\n  ⚖  Tribunal CI — {len(files)} file(s) checked\n")
+        if all_findings:
+            for finding in all_findings:
+                icon = "⛔" if finding.severity == "error" else "⚠️" if finding.severity == "warning" else "ℹ️"
+                loc = f":{finding.line}" if finding.line > 0 else ""
+                print(f"  {icon} {finding.file}{loc}")
+                print(f"    {finding.message}")
+                print(f"    [{finding.rule_id}]")
+                print()
+        if errors:
+            print(f"  ✗ {len(errors)} error(s), {len(warnings)} warning(s)")
+        elif warnings:
+            print(f"  ⚠ {len(warnings)} warning(s), 0 errors")
+        else:
+            print("  ✓ All checks passed.")
+        print()
+
+    # Exit code: 1 if errors, 0 otherwise
+    return 1 if errors else 0
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     """Run health checks on Tribunal installation and project setup."""
     project_dir = Path.cwd()
@@ -545,6 +633,14 @@ def main() -> None:
     pack_inst_p.add_argument("name", help="Pack name: soc2, startup, enterprise, security")
     pack_inst_p.add_argument("--replace", action="store_true", help="Replace rules instead of merging")
 
+    # ci
+    ci_p = sub.add_parser("ci", help="Run quality checks (CI/CD entrypoint)")
+    ci_p.add_argument("files", nargs="*", help="Files or directories to check (default: project root)")
+    ci_p.add_argument("-f", "--format", choices=["text", "json", "sarif"], default="text", help="Output format")
+    ci_p.add_argument("-o", "--output", help="Write output to file instead of stdout")
+    ci_p.add_argument("--checkers", help="Comma-separated list of checkers: secrets,tdd,python,typescript,go")
+    ci_p.add_argument("--project", help="Project root directory (default: cwd)")
+
     # doctor
     sub.add_parser("doctor", help="Run health checks on Tribunal setup")
 
@@ -557,6 +653,7 @@ def main() -> None:
         "audit": cmd_audit,
         "config": cmd_config,
         "pack": cmd_pack,
+        "ci": cmd_ci,
         "doctor": cmd_doctor,
     }
 
