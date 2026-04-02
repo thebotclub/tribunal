@@ -401,6 +401,7 @@ class TestConfigValidation:
 
 # ── Memory Limit Tests ────────────────────────────────────────────────────────
 
+@pytest.mark.skip(reason="tribunal.memory archived in 2.0 pivot")
 class TestMemoryLimits:
     """Tests for memory.py — file count and size limits."""
 
@@ -518,6 +519,7 @@ class TestMemoryLimits:
 
 # ── Analytics Tests ───────────────────────────────────────────────────────────
 
+@pytest.mark.skip(reason="tribunal.analytics archived in 2.0 pivot")
 class TestAnalytics:
     """Tests for analytics.py — cost trends and anomaly detection."""
 
@@ -602,6 +604,7 @@ class TestAnalytics:
 
 # ── Airgap Bundle Tests ──────────────────────────────────────────────────────
 
+@pytest.mark.skip(reason="tribunal.airgap archived in 2.0 pivot")
 class TestAirgap:
     """Tests for airgap.py — bundle creation, export, import, and validation."""
 
@@ -703,6 +706,7 @@ class TestAirgap:
 
 # ── Dashboard Tests ──────────────────────────────────────────────────────────
 
+@pytest.mark.skip(reason="tribunal.dashboard archived in 2.0 pivot")
 class TestDashboard:
     """Tests for dashboard.py — stats computation and HTML report generation."""
 
@@ -823,6 +827,7 @@ class TestMissingToolDetection:
 
 # ── Cost Module Tests (atomic writes integration) ────────────────────────────
 
+@pytest.mark.skip(reason="tribunal.cost archived in 2.0 pivot")
 class TestCostAtomicWrites:
     """Tests for cost.py — verify atomic write integration."""
 
@@ -856,4 +861,4 @@ class TestVersion:
 
     def test_version_is_1_2_0(self):
         from tribunal import __version__
-        assert __version__ == "1.2.0"
+        assert __version__ == "2.0.0a1"

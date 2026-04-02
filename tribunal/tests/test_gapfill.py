@@ -150,6 +150,7 @@ class TestCompactionAnalytics:
 # ── Per-agent audit trails ───────────────────────────────────────────────────
 
 
+@pytest.mark.skip(reason="tribunal.agents archived in 2.0 pivot")
 class TestPerAgentAuditTrails:
     def test_log_agent_event(self):
         from tribunal.agents import log_agent_event
@@ -188,6 +189,7 @@ class TestPerAgentAuditTrails:
 # ── Task-description permission matching ─────────────────────────────────────
 
 
+@pytest.mark.skip(reason="tribunal.agents archived in 2.0 pivot")
 class TestAgentPermissions:
     def _write_policy(self, tmpdir, agent_perms):
         config_dir = Path(tmpdir) / ".tribunal"
@@ -259,6 +261,7 @@ class TestAgentPermissions:
 # ── Memory stats ─────────────────────────────────────────────────────────────
 
 
+@pytest.mark.skip(reason="tribunal.memory archived in 2.0 pivot")
 class TestMemoryStats:
     def test_memory_stats_empty(self):
         from tribunal.memory import memory_stats

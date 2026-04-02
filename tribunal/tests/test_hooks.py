@@ -26,33 +26,27 @@ def _make_event(hook_name: str, **kwargs) -> HookEvent:
 
 
 class TestSessionEnd:
-    def test_session_end_writes_summary(self):
+    def test_session_end_allows(self):
         from tribunal.hooks import handle_session_end
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Create state with cost data
             state_dir = Path(tmpdir) / ".tribunal"
             state_dir.mkdir()
-            (state_dir / "state.json").write_text(json.dumps({
-                "session_cost_usd": 1.23,
-                "model": "opus",
-            }))
+            (state_dir / "audit.jsonl").write_text("")
             event = _make_event("SessionEnd", cwd=tmpdir)
             verdict = handle_session_end(event)
             assert verdict.allow is True
-            assert "$1.23" in verdict.additional_context
+            assert "Session ended" in verdict.additional_context
 
-    def test_session_end_creates_memory(self):
+    def test_session_end_logs_event(self):
         from tribunal.hooks import handle_session_end
         with tempfile.TemporaryDirectory() as tmpdir:
             state_dir = Path(tmpdir) / ".tribunal"
             state_dir.mkdir()
-            (state_dir / "state.json").write_text(json.dumps({"session_cost_usd": 0.5}))
+            (state_dir / "audit.jsonl").write_text("")
             event = _make_event("SessionEnd", cwd=tmpdir, session_id="sess_abc123")
             handle_session_end(event)
-            # Check memory was created
-            mem_dir = Path(tmpdir) / ".claude" / "memory"
-            memories = list(mem_dir.glob("tribunal-session-*.md")) if mem_dir.exists() else []
-            assert len(memories) == 1
+            audit = (state_dir / "audit.jsonl").read_text()
+            assert "session-end" in audit
 
 
 class TestPostToolFailure:
@@ -138,20 +132,21 @@ class TestCompact:
         with tempfile.TemporaryDirectory() as tmpdir:
             state_dir = Path(tmpdir) / ".tribunal"
             state_dir.mkdir()
-            (state_dir / "state.json").write_text(json.dumps({
-                "session_cost_usd": 2.5,
-                "budget": {"session_usd": 5.0},
-            }))
+            (state_dir / "state.json").write_text("{}")
+            (state_dir / "audit.jsonl").write_text("")
             event = _make_event("PreCompact", cwd=tmpdir)
             verdict = handle_pre_compact(event)
             assert verdict.allow is True
-            # Check compact state was saved
-            mem_dir = Path(tmpdir) / ".claude" / "memory"
-            assert (mem_dir / "tribunal-compact-state.md").exists()
+            state = json.loads((state_dir / "state.json").read_text())
+            assert state.get("compaction_count") == 1
 
     def test_post_compact_reinjects_rules(self):
         from tribunal.hooks import handle_post_compact
         with tempfile.TemporaryDirectory() as tmpdir:
+            state_dir = Path(tmpdir) / ".tribunal"
+            state_dir.mkdir()
+            (state_dir / "state.json").write_text("{}")
+            (state_dir / "audit.jsonl").write_text("")
             event = _make_event("PostCompact", cwd=tmpdir)
             verdict = handle_post_compact(event)
             assert verdict.allow is True

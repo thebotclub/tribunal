@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tribunal"
-version = "1.2.0"
-description = "Enterprise-grade discipline for Claude Code — TDD enforcement, quality gates, and team standards."
+version = "2.0.0a1"
+description = "Quality gates for AI-generated code — TDD enforcement, secret scanning, and audit trails for coding agents."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 authors = [{ name = "thebotclub" }]
-keywords = ["claude", "claude-code", "tdd", "quality", "hooks", "ai", "coding-agent"]
+keywords = ["ai", "quality-gates", "tdd", "secret-scanning", "coding-agent", "ci", "hooks"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -40,8 +40,6 @@ Documentation = "https://github.com/thebotclub/tribunal/blob/main/README.md"
 [project.scripts]
 tribunal = "tribunal.cli:main"
 tribunal-gate = "tribunal.gate:main"
-tribunal-mcp = "tribunal.mcp_server:main"
-tribunal-dashboard = "tribunal.dashboard_api:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tribunal"]

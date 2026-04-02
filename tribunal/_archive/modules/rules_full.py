@@ -75,6 +75,9 @@ def _extract_path(event: HookEvent) -> str | None:
     for key in ("path", "file_path", "filePath", "filename"):
         if key in inp:
             return inp[key]
+    # Bash commands: try to extract path from command string
+    if event.tool_name == "Bash" and "command" in inp:
+        return None  # Bash commands don't have a single path
     return None
 
 
@@ -126,6 +129,7 @@ class RuleEngine:
         config_path = project_dir / ".tribunal" / "rules.yaml"
         engine = cls.from_config(config_path)
 
+        # Also load built-in rules if no project rules exist
         if not engine.rules:
             engine.rules = _default_rules()
 
@@ -143,6 +147,7 @@ class RuleEngine:
             if not rule.match.matches(event):
                 continue
 
+            # Check built-in conditions
             triggered, msg = _check_condition(rule, event)
             if not triggered:
                 continue
@@ -156,6 +161,7 @@ class RuleEngine:
                 message=message,
             ))
 
+        # If any rule blocks, the verdict is block
         blocking = [r for r in results if r.blocked]
         if blocking:
             reasons = "\n".join(
@@ -166,6 +172,7 @@ class RuleEngine:
                 reason=f"Tribunal blocked this operation:\n{reasons}",
             )
 
+        # Collect warnings
         warnings = [r for r in results if r.triggered and not r.blocked]
         if warnings:
             context = "\n".join(
@@ -181,6 +188,7 @@ class RuleEngine:
 
 def _check_condition(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     """Check a rule's built-in condition or run command. Returns (triggered, message)."""
+    # If rule has a `run` command and action is block-on-failure, run the command
     if rule.run and not rule.condition:
         return _condition_run_command(rule, event)
 
@@ -201,6 +209,7 @@ def _condition_no_matching_test(rule: Rule, event: HookEvent) -> tuple[bool, str
     if not file_path:
         return False, ""
 
+    # Only apply to Python source files (not test files themselves)
     if not file_path.endswith(".py"):
         return False, ""
     basename = os.path.basename(file_path)
@@ -211,6 +220,7 @@ def _condition_no_matching_test(rule: Rule, event: HookEvent) -> tuple[bool, str
     if basename in ("__init__.py", "conftest.py", "setup.py"):
         return False, ""
 
+    # Check if a corresponding test file exists
     cwd = event.cwd
     module_name = basename.removesuffix(".py")
     test_patterns = [
@@ -220,6 +230,7 @@ def _condition_no_matching_test(rule: Rule, event: HookEvent) -> tuple[bool, str
         f"test_{module_name}.py",
     ]
 
+    # Also check relative to the file's directory
     file_dir = os.path.dirname(file_path)
     if file_dir:
         test_patterns.extend([
@@ -237,9 +248,11 @@ def _condition_no_matching_test(rule: Rule, event: HookEvent) -> tuple[bool, str
 
 def _condition_contains_secret(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     """Check if tool input contains patterns that look like secrets."""
+    # Get the content being written
     content = ""
     inp = event.tool_input
 
+    # FileEdit: check new_string / edits
     if "new_string" in inp:
         content = inp["new_string"]
     elif "content" in inp:
@@ -252,6 +265,7 @@ def _condition_contains_secret(rule: Rule, event: HookEvent) -> tuple[bool, str]
     if not content:
         return False, ""
 
+    # Patterns that indicate hardcoded secrets
     secret_patterns = [
         (r'(?:api[_-]?key|apikey)\s*[=:]\s*["\']?[A-Za-z0-9_\-]{20,}', "API key"),
         (r'(?:secret|password|passwd|pwd)\s*[=:]\s*["\']?[^\s"\']{8,}', "password/secret"),
@@ -267,6 +281,19 @@ def _condition_contains_secret(rule: Rule, event: HookEvent) -> tuple[bool, str]
         if re.search(pattern, content, re.IGNORECASE):
             return True, f"Possible {label} detected in code. Use environment variables instead."
 
+    return False, ""
+
+
+def _condition_cost_exceeded(rule: Rule, event: HookEvent) -> tuple[bool, str]:
+    """Check if session cost exceeds budget (uses the cost module)."""
+    from .cost import check_budget
+
+    result = check_budget(event.cwd)
+    if result.exceeded:
+        return True, result.message
+    if result.warning:
+        # For warn-level rules, still trigger to inject the warning message
+        return True, result.message
     return False, ""
 
 
@@ -290,6 +317,7 @@ def _condition_run_command(rule: Rule, event: HookEvent) -> tuple[bool, str]:
             return False, ""  # Command not found — skip gracefully
         if result.returncode != 0:
             output = (result.stdout + result.stderr).strip()
+            # Truncate long output
             if len(output) > 500:
                 output = output[:500] + "\n... (truncated)"
             return True, f"Command failed (exit {result.returncode}):\n{output}" if output else f"Command failed (exit {result.returncode})"
@@ -322,6 +350,13 @@ def _condition_no_matching_test_ts(rule: Rule, event: HookEvent) -> tuple[bool, 
     ext = basename.rsplit(".", 1)[1]
 
     cwd = event.cwd
+    test_patterns = [
+        f"**/{module_name}.test.{ext}",
+        f"**/{module_name}.spec.{ext}",
+        f"**/__tests__/{module_name}.{ext}",
+    ]
+
+    # Simple existence check (not full glob, just common locations)
     file_dir = os.path.dirname(file_path)
     checks = [
         os.path.join(cwd, file_dir, f"{module_name}.test.{ext}"),
@@ -378,6 +413,7 @@ def _condition_lint_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
 
     import subprocess
 
+    # Try eslint for JS/TS, ruff for Python
     if file_path.endswith((".ts", ".tsx", ".js", ".jsx")):
         cmd = ["npx", "eslint", "--no-warn-ignored", file_path]
     elif file_path.endswith(".py"):
@@ -446,6 +482,7 @@ _CONDITIONS: dict[str, Any] = {
     "no-matching-test": _condition_no_matching_test,
     "no-matching-test-ts": _condition_no_matching_test_ts,
     "contains-secret": _condition_contains_secret,
+    "cost-exceeded": _condition_cost_exceeded,
     "type-check": _condition_type_check,
     "lint-check": _condition_lint_check,
     "mypy-check": _condition_mypy_check,
