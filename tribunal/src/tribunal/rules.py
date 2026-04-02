@@ -296,7 +296,7 @@ def _condition_run_command(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return False, ""
     except subprocess.TimeoutExpired:
         return True, f"Command timed out after 30s: {rule.run}"
-    except FileNotFoundError:
+    except (FileNotFoundError, NotADirectoryError, OSError):
         cmd_name = rule.run.split()[0] if rule.run else "unknown"
         sys.stderr.write(f"tribunal: WARNING: command '{cmd_name}' not found for rule '{rule.name}'\n")
         if rule.require_tool:
