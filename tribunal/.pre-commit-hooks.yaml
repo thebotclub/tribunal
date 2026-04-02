@@ -1,0 +1,19 @@
+- id: tribunal-ci
+  name: Tribunal CI
+  description: "Quality gates for AI-generated code — secret scanning, TDD enforcement, linting"
+  entry: tribunal ci
+  language: python
+  types_or: [python, ts, tsx, javascript, jsx, go]
+  args: ["--format", "text"]
+  pass_filenames: true
+  require_serial: false
+
+- id: tribunal-secrets
+  name: Tribunal Secret Scan
+  description: "Scan for hardcoded secrets and credentials"
+  entry: tribunal ci --checkers secrets
+  language: python
+  types_or: [python, ts, tsx, javascript, jsx, go, yaml, json, toml]
+  args: ["--format", "text"]
+  pass_filenames: true
+  require_serial: false

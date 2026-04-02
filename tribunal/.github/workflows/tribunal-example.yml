@@ -1,0 +1,25 @@
+# Example: Add Tribunal CI to your GitHub Actions workflow
+# Copy this file to .github/workflows/tribunal.yml in your repository
+
+name: Tribunal CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  security-events: write  # Required for SARIF upload to Code Scanning
+  contents: read
+
+jobs:
+  tribunal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Tribunal CI
+        uses: thebotclub/tribunal@v2
+        with:
+          format: sarif
+          upload-sarif: "true"

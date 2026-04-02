@@ -1,0 +1,87 @@
+name: "Tribunal CI"
+description: "Quality gates for AI-generated code — secret scanning, TDD enforcement, linting"
+author: "thebotclub"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  path:
+    description: "Path to scan (default: repository root)"
+    required: false
+    default: "."
+  format:
+    description: "Output format: text, json, sarif"
+    required: false
+    default: "sarif"
+  checkers:
+    description: "Comma-separated list of checkers to run (default: all)"
+    required: false
+    default: ""
+  python-version:
+    description: "Python version to use"
+    required: false
+    default: "3.12"
+  upload-sarif:
+    description: "Upload SARIF to GitHub Code Scanning (requires security-events: write)"
+    required: false
+    default: "true"
+
+outputs:
+  findings:
+    description: "Number of findings"
+  errors:
+    description: "Number of errors"
+  exit-code:
+    description: "Exit code (0 = pass, 1 = fail)"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Tribunal
+      shell: bash
+      run: pip install tribunal
+
+    - name: Run Tribunal CI
+      id: tribunal
+      shell: bash
+      run: |
+        set +e
+        ARGS=""
+        if [ -n "${{ inputs.checkers }}" ]; then
+          ARGS="--checkers ${{ inputs.checkers }}"
+        fi
+        if [ "${{ inputs.format }}" = "sarif" ]; then
+          tribunal ci ${{ inputs.path }} --format sarif --output tribunal-results.sarif $ARGS
+          EXIT_CODE=$?
+          # Count findings from SARIF
+          if [ -f tribunal-results.sarif ]; then
+            FINDINGS=$(python -c "import json; d=json.load(open('tribunal-results.sarif')); print(len(d['runs'][0]['results']))")
+            ERRORS=$(python -c "import json; d=json.load(open('tribunal-results.sarif')); print(len([r for r in d['runs'][0]['results'] if r['level']=='error']))")
+          else
+            FINDINGS=0
+            ERRORS=0
+          fi
+        else
+          tribunal ci ${{ inputs.path }} --format ${{ inputs.format }} $ARGS
+          EXIT_CODE=$?
+          FINDINGS="n/a"
+          ERRORS="n/a"
+        fi
+        echo "findings=$FINDINGS" >> "$GITHUB_OUTPUT"
+        echo "errors=$ERRORS" >> "$GITHUB_OUTPUT"
+        echo "exit-code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+        exit $EXIT_CODE
+
+    - name: Upload SARIF to GitHub Code Scanning
+      if: inputs.upload-sarif == 'true' && inputs.format == 'sarif' && always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: tribunal-results.sarif
+        category: tribunal
