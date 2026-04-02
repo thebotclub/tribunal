@@ -115,38 +115,71 @@ def handle_config_change(event: HookEvent) -> HookVerdict:
 
 
 def handle_permission_request(event: HookEvent) -> HookVerdict:
-    """Handle PermissionRequest — audit permission requests."""
+    """Handle PermissionRequest — audit permission requests and track grants."""
+    from .io import atomic_write_json, locked_read_json
+
     log_event(event, True, "permission-request")
+
+    # Track granted permissions for escalation detection
+    cwd = event.cwd
+    state_path = Path(cwd) / ".tribunal" / "state.json"
+    state = locked_read_json(state_path)
+    granted = state.get("permissions_granted", [])
+    granted.append({
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "tool": event.tool_name or "",
+        "session_id": event.session_id or "",
+    })
+    state["permissions_granted"] = granted[-100:]
+    atomic_write_json(state_path, state)
+
     return HookVerdict(allow=True)
 
 
 def handle_permission_denied(event: HookEvent) -> HookVerdict:
-    """Handle PermissionDenied — log denied permissions."""
+    """Handle PermissionDenied — log denied permissions and detect escalation."""
     from .io import atomic_write_json, locked_read_json
 
     log_event(event, False, "permission-denied")
 
-    # Track denied permissions for compliance reporting
     cwd = event.cwd
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
+
+    # Track denied permissions for compliance reporting
     denied = state.get("permissions_denied", [])
     denied.append({
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "tool": event.tool_name or "",
-        "session_id": event.session_id,
+        "session_id": event.session_id or "",
     })
-    # Keep last 100 denials
     state["permissions_denied"] = denied[-100:]
+
+    # Escalation detection — check if same tool was previously granted then denied
+    tool = event.tool_name or ""
+    if tool:
+        granted = state.get("permissions_granted", [])
+        escalations = state.get("permission_escalations", [])
+        for g in granted:
+            if g.get("tool") == tool:
+                escalations.append({
+                    "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "tool": tool,
+                    "type": "grant-then-deny",
+                })
+                break  # One escalation record per denial event
+        state["permission_escalations"] = escalations[-50:]
+
     atomic_write_json(state_path, state)
 
     return HookVerdict(allow=True)
 
 
 def handle_pre_compact(event: HookEvent) -> HookVerdict:
-    """Handle PreCompact — save critical state before context compaction."""
+    """Handle PreCompact — save critical state and track compaction frequency."""
     from .memory import inject_memory, MemoryEntry
     from .cost import load_state
+    from .io import atomic_write_json, locked_read_json
 
     cwd = event.cwd
     state = load_state(cwd)
@@ -168,15 +201,42 @@ def handle_pre_compact(event: HookEvent) -> HookVerdict:
         )
         inject_memory(cwd, entry, "tribunal-compact-state.md")
 
+    # Track compaction frequency for analytics
+    trib_state_path = Path(cwd) / ".tribunal" / "state.json"
+    trib_state = locked_read_json(trib_state_path)
+    compactions = trib_state.get("compaction_events", [])
+    compactions.append({
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "type": "pre",
+        "session_id": event.session_id or "",
+    })
+    trib_state["compaction_events"] = compactions[-100:]
+    trib_state["compaction_count"] = trib_state.get("compaction_count", 0) + 1
+    atomic_write_json(trib_state_path, trib_state)
+
     log_event(event, True, "pre-compact")
     return HookVerdict(allow=True)
 
 
 def handle_post_compact(event: HookEvent) -> HookVerdict:
-    """Handle PostCompact — re-inject essential rules after context loss."""
+    """Handle PostCompact — re-inject essential rules and log compaction completion."""
     from .memory import inject_rules_as_memory
+    from .io import atomic_write_json, locked_read_json
 
     inject_rules_as_memory(event.cwd)
+
+    # Log compaction completion
+    trib_state_path = Path(event.cwd) / ".tribunal" / "state.json"
+    trib_state = locked_read_json(trib_state_path)
+    compactions = trib_state.get("compaction_events", [])
+    compactions.append({
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "type": "post",
+        "session_id": event.session_id or "",
+    })
+    trib_state["compaction_events"] = compactions[-100:]
+    atomic_write_json(trib_state_path, trib_state)
+
     log_event(event, True, "post-compact")
 
     return HookVerdict(

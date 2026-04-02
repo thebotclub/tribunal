@@ -264,3 +264,36 @@ def format_memory_status(cwd: str) -> str:
 
     lines.append("")
     return "\n".join(lines)
+
+
+def memory_stats(cwd: str) -> dict[str, Any]:
+    """Return memory capacity stats: counts, sizes, limits."""
+    mem_dir = _memory_dir(cwd)
+    total_files = _memory_file_count(mem_dir)
+    tribunal_entries = list_tribunal_memories(cwd)
+    tribunal_count = len(tribunal_entries)
+    total_bytes = sum(e["size"] for e in tribunal_entries)
+
+    return {
+        "total_memory_files": total_files,
+        "tribunal_files": tribunal_count,
+        "other_files": total_files - tribunal_count,
+        "tribunal_bytes": total_bytes,
+        "max_files": MAX_MEMORY_FILES,
+        "max_entry_bytes": MAX_ENTRY_BYTES,
+        "capacity_pct": round(total_files / MAX_MEMORY_FILES * 100, 1) if MAX_MEMORY_FILES else 0,
+    }
+
+
+def format_memory_stats(cwd: str) -> str:
+    """Format memory stats for CLI display."""
+    stats = memory_stats(cwd)
+    lines = ["\n  ⚖  Tribunal Memory Stats\n"]
+    lines.append(f"  Total memory files:  {stats['total_memory_files']} / {stats['max_files']}")
+    lines.append(f"  Tribunal files:      {stats['tribunal_files']}")
+    lines.append(f"  Other files:         {stats['other_files']}")
+    lines.append(f"  Tribunal size:       {stats['tribunal_bytes']:,} bytes")
+    lines.append(f"  Max entry size:      {stats['max_entry_bytes']:,} bytes")
+    lines.append(f"  Capacity:            {stats['capacity_pct']}%")
+    lines.append("")
+    return "\n".join(lines)

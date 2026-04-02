@@ -16,9 +16,61 @@ import os
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import yaml
+
+
+# ── TypedDict definitions for config schema ────────────────────────────────────
+
+class BudgetConfig(TypedDict, total=False):
+    """Budget configuration section."""
+    session_usd: float
+    daily_usd: float
+    warn_percent: float
+
+
+class AuditConfig(TypedDict, total=False):
+    """Audit configuration section."""
+    enabled: bool
+    path: str
+    max_bytes: int
+    keep_rotated: int
+
+
+class MultiAgentConfig(TypedDict, total=False):
+    """Multi-agent governance section."""
+    max_concurrent_agents: int
+    per_agent_budget: float
+    shared_session_budget: float
+    agent_permissions: dict[str, dict[str, list[str]]]
+
+
+class RuleConfig(TypedDict, total=False):
+    """Individual rule definition."""
+    trigger: str
+    match: dict[str, str]
+    action: str
+    message: str
+    condition: str
+    run: str
+    enabled: bool
+    require_tool: bool
+
+
+class TribunalConfigDict(TypedDict, total=False):
+    """Top-level config.yaml schema."""
+    budget: BudgetConfig
+    audit: AuditConfig
+    skills_dirs: list[str]
+    permission_preset: str
+    review_agents: list[str]
+    mcp_enabled: bool
+    features: dict[str, bool]
+    rules: dict[str, RuleConfig]
+    model_routing: dict[str, Any]
+    managed: dict[str, Any]
+    multi_agent: MultiAgentConfig
 
 
 @dataclass

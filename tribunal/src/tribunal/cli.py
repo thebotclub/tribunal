@@ -310,6 +310,20 @@ def cmd_audit(args: argparse.Namespace) -> int:
     project_dir = Path.cwd()
     audit_path = project_dir / ".tribunal" / "audit.jsonl"
 
+    sub = getattr(args, "audit_command", None)
+
+    if sub == "rotate":
+        from .audit import rotate_audit_log
+        if not audit_path.exists():
+            print("  No audit log to rotate.")
+            return 0
+        rotated = rotate_audit_log(audit_path)
+        if rotated:
+            print("  ✓ Audit log rotated.")
+        else:
+            print("  ✓ Audit log below rotation threshold — no action needed.")
+        return 0
+
     if not audit_path.exists():
         print("No audit log yet. Start a Claude Code session with tribunal hooks active.")
         return 0
@@ -524,8 +538,27 @@ def cmd_report(args: argparse.Namespace) -> int:
 
 
 def cmd_config(args: argparse.Namespace) -> int:
-    """Show resolved Tribunal configuration."""
-    from .config import format_config, resolve_config
+    """Show or validate Tribunal configuration."""
+    from .config import format_config, resolve_config, validate_config
+
+    sub = getattr(args, "config_command", None)
+
+    if sub == "validate":
+        config_path = Path.cwd() / ".tribunal" / "config.yaml"
+        if not config_path.is_file():
+            print("  No .tribunal/config.yaml to validate.")
+            return 0
+        data = yaml.safe_load(config_path.read_text()) or {}
+        errors = validate_config(data)
+        if errors:
+            print(f"\n  ⚠  Config validation found {len(errors)} issue(s):\n")
+            for e in errors:
+                print(f"    ✗ {e}")
+            print()
+            return 1
+        else:
+            print("  ✓ Configuration is valid.")
+            return 0
 
     config = resolve_config(str(Path.cwd()))
     print(format_config(config))
@@ -673,6 +706,7 @@ def cmd_memory(args: argparse.Namespace) -> int:
     """Memory injection management."""
     from .memory import (
         clear_tribunal_memories,
+        format_memory_stats,
         format_memory_status,
         inject_rules_as_memory,
         inject_session_summary,
@@ -696,6 +730,9 @@ def cmd_memory(args: argparse.Namespace) -> int:
     elif sub == "clear":
         removed = clear_tribunal_memories(str(Path.cwd()))
         print(f"  ✓ Removed {removed} tribunal memory entries")
+        return 0
+    elif sub == "stats":
+        print(format_memory_stats(str(Path.cwd())))
         return 0
     else:
         print(format_memory_status(str(Path.cwd())))
@@ -788,14 +825,165 @@ def cmd_dashboard(args: argparse.Namespace) -> int:
 
 def cmd_agents(args: argparse.Namespace) -> int:
     """Multi-agent governance."""
-    from .agents import format_agent_tree
+    from .agents import format_agent_tree, get_agent_trail, load_multi_agent_policy
 
     sub = getattr(args, "agents_command", None)
 
     if sub == "tree" or sub is None:
         print(format_agent_tree(str(Path.cwd())))
         return 0
+    elif sub == "policy":
+        policy = load_multi_agent_policy(str(Path.cwd()))
+        print(f"\n  ⚖  Multi-Agent Policy\n")
+        print(f"  Max concurrent agents: {policy.max_concurrent_agents or 'unlimited'}")
+        print(f"  Per-agent budget:      {'$%.2f' % policy.per_agent_budget if policy.per_agent_budget else 'unlimited'}")
+        print(f"  Shared session budget: {'$%.2f' % policy.shared_session_budget if policy.shared_session_budget else 'unlimited'}")
+        if policy.agent_permissions:
+            print(f"\n  Agent permissions:")
+            for atype, perms in policy.agent_permissions.items():
+                print(f"    {atype}:")
+                if "allowed_tools" in perms:
+                    print(f"      allowed: {perms['allowed_tools']}")
+                if "blocked_tools" in perms:
+                    print(f"      blocked: {perms['blocked_tools']}")
+        print()
+        return 0
+    elif sub == "trail":
+        agent_id = getattr(args, "agent_id", None)
+        if not agent_id:
+            print("  ✗ Specify an agent ID.")
+            return 1
+        trail = get_agent_trail(str(Path.cwd()), agent_id)
+        if not trail:
+            print(f"  No audit trail for agent '{agent_id}'.")
+            return 0
+        print(f"\n  📋 Agent Trail: {agent_id} ({len(trail)} entries)\n")
+        for entry in trail[-20:]:
+            ts = entry.get("ts", "?")
+            event = entry.get("event", "?")
+            details = entry.get("details", "")
+            print(f"  {ts}  {event}  {details}")
+        print()
+        return 0
     return 0
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    """Run health checks on Tribunal installation and project setup."""
+    project_dir = Path.cwd()
+    issues = 0
+    warnings = 0
+
+    print(f"\n  ⚖  Tribunal Doctor v{__version__}\n")
+
+    # 1. Check tribunal-gate on PATH
+    if shutil.which("tribunal-gate"):
+        print("  ✓ tribunal-gate is on PATH")
+    else:
+        print("  ✗ tribunal-gate not found on PATH")
+        issues += 1
+
+    # 2. Check .tribunal/ directory
+    tribunal_dir = project_dir / ".tribunal"
+    if tribunal_dir.is_dir():
+        print("  ✓ .tribunal/ directory exists")
+    else:
+        print("  ✗ .tribunal/ directory missing — run: tribunal init")
+        issues += 1
+
+    # 3. Check rules.yaml
+    rules_path = tribunal_dir / "rules.yaml"
+    if rules_path.is_file():
+        try:
+            data = yaml.safe_load(rules_path.read_text()) or {}
+            rules = data.get("rules", {})
+            print(f"  ✓ rules.yaml — {len(rules)} rule(s)")
+
+            # Check tools required by rules
+            for name, rdef in rules.items():
+                if not isinstance(rdef, dict):
+                    continue
+                condition = rdef.get("condition", "")
+                if condition == "type-check":
+                    if not shutil.which("mypy"):
+                        print(f"  ⚠ Rule '{name}' needs mypy but it's not installed")
+                        warnings += 1
+                if condition == "lint-check":
+                    if not shutil.which("ruff") and not shutil.which("flake8"):
+                        print(f"  ⚠ Rule '{name}' needs ruff/flake8 but neither is installed")
+                        warnings += 1
+                run_cmd = rdef.get("run", "")
+                if run_cmd:
+                    cmd_name = run_cmd.split()[0] if run_cmd else ""
+                    if cmd_name and not shutil.which(cmd_name):
+                        print(f"  ⚠ Rule '{name}' runs '{cmd_name}' but it's not installed")
+                        warnings += 1
+        except yaml.YAMLError as e:
+            print(f"  ✗ rules.yaml is invalid YAML: {e}")
+            issues += 1
+    else:
+        print("  ✗ rules.yaml missing — run: tribunal init")
+        issues += 1
+
+    # 4. Check claudeconfig.json
+    config_path = project_dir / ".claude" / "claudeconfig.json"
+    if config_path.is_file():
+        try:
+            with open(config_path) as f:
+                config = json.load(f)
+            hooks = config.get("hooks", {})
+            has_tribunal = "tribunal-gate" in json.dumps(hooks)
+            if has_tribunal:
+                hook_count = sum(len(v) for v in hooks.values())
+                print(f"  ✓ claudeconfig.json — {hook_count} hook(s) with tribunal-gate")
+            else:
+                print("  ⚠ claudeconfig.json exists but tribunal-gate not configured")
+                warnings += 1
+        except (json.JSONDecodeError, OSError):
+            print("  ✗ claudeconfig.json is invalid")
+            issues += 1
+    else:
+        print("  ✗ .claude/claudeconfig.json missing — run: tribunal init")
+        issues += 1
+
+    # 5. Check .tribunal/config.yaml if present
+    cfg_path = tribunal_dir / "config.yaml"
+    if cfg_path.is_file():
+        from .config import validate_config
+        try:
+            data = yaml.safe_load(cfg_path.read_text()) or {}
+            errors = validate_config(data)
+            if errors:
+                print(f"  ⚠ config.yaml has {len(errors)} validation issue(s)")
+                warnings += len(errors)
+            else:
+                print("  ✓ config.yaml is valid")
+        except yaml.YAMLError:
+            print("  ✗ config.yaml is invalid YAML")
+            issues += 1
+
+    # 6. Check audit log
+    audit_path = tribunal_dir / "audit.jsonl"
+    if audit_path.is_file():
+        size = audit_path.stat().st_size
+        print(f"  ✓ audit.jsonl exists ({size:,} bytes)")
+        if size > 10_000_000:
+            print("  ⚠ Audit log exceeds 10MB — consider: tribunal audit rotate")
+            warnings += 1
+    else:
+        print("  ○ No audit log yet (will be created on first session)")
+
+    # Summary
+    print()
+    if issues == 0 and warnings == 0:
+        print("  ✓ All checks passed.")
+    else:
+        if issues:
+            print(f"  ✗ {issues} issue(s) found")
+        if warnings:
+            print(f"  ⚠ {warnings} warning(s)")
+    print()
+    return 1 if issues > 0 else 0
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
@@ -825,6 +1013,8 @@ def main() -> None:
     # audit
     audit_p = sub.add_parser("audit", help="Show recent audit log")
     audit_p.add_argument("-n", "--count", type=int, default=20, help="Number of entries")
+    audit_sub = audit_p.add_subparsers(dest="audit_command")
+    audit_sub.add_parser("rotate", help="Rotate the audit log file")
 
     # cost
     cost_p = sub.add_parser("cost", help="Cost tracking and budget management")
@@ -862,7 +1052,10 @@ def main() -> None:
     report_p.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
 
     # config
-    sub.add_parser("config", help="Show resolved configuration")
+    config_p = sub.add_parser("config", help="Show resolved configuration")
+    config_sub = config_p.add_subparsers(dest="config_command")
+    config_sub.add_parser("show", help="Show resolved config")
+    config_sub.add_parser("validate", help="Validate .tribunal/config.yaml")
 
     # plugin
     plugin_p = sub.add_parser("plugin", help="Plugin manifest management")
@@ -912,6 +1105,7 @@ def main() -> None:
     summary_p.add_argument("text", nargs="?", default="", help="Summary text")
     mem_sub.add_parser("list", help="List tribunal memory entries")
     mem_sub.add_parser("clear", help="Clear tribunal memory entries")
+    mem_sub.add_parser("stats", help="Show memory capacity stats")
 
     # analytics
     analytics_p = sub.add_parser("analytics", help="Cost analytics and trends")
@@ -938,6 +1132,12 @@ def main() -> None:
     agents_p = sub.add_parser("agents", help="Multi-agent governance")
     agents_sub = agents_p.add_subparsers(dest="agents_command")
     agents_sub.add_parser("tree", help="Show agent tree with costs")
+    agents_sub.add_parser("policy", help="Show multi-agent policy")
+    trail_p = agents_sub.add_parser("trail", help="Show per-agent audit trail")
+    trail_p.add_argument("agent_id", help="Agent ID to show trail for")
+
+    # doctor
+    sub.add_parser("doctor", help="Run health checks on Tribunal setup")
 
     args = parser.parse_args()
 
@@ -962,6 +1162,7 @@ def main() -> None:
         "bundle": cmd_bundle,
         "dashboard": cmd_dashboard,
         "agents": cmd_agents,
+        "doctor": cmd_doctor,
     }
 
     if args.command == "mcp-serve":

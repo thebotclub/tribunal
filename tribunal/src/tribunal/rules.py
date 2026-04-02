@@ -56,6 +56,7 @@ class Rule:
     condition: str | None = None  # built-in condition name
     run: str | None = None  # shell command to run for validation
     enabled: bool = True
+    require_tool: bool = False  # if True, block when tool not found instead of skipping
 
 
 @dataclass
@@ -116,6 +117,7 @@ class RuleEngine:
                 condition=rdef.get("condition"),
                 run=rdef.get("run"),
                 enabled=rdef.get("enabled", True),
+                require_tool=rdef.get("require_tool", False),
             ))
 
         return cls(rules)
@@ -325,6 +327,8 @@ def _condition_run_command(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     except FileNotFoundError:
         cmd_name = rule.run.split()[0] if rule.run else "unknown"
         sys.stderr.write(f"tribunal: WARNING: command '{cmd_name}' not found for rule '{rule.name}'\n")
+        if rule.require_tool:
+            return True, f"Rule '{rule.name}' requires '{cmd_name}' but it's not installed."
         return False, ""
 
 
@@ -396,6 +400,8 @@ def _condition_type_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return True, "TypeScript type-check timed out after 60s"
     except FileNotFoundError:
         sys.stderr.write("tribunal: WARNING: 'npx tsc' not found — type-check rule skipped\n")
+        if rule.require_tool:
+            return True, "Rule requires 'tsc' but it's not installed."
         return False, ""
 
 
@@ -434,6 +440,8 @@ def _condition_lint_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     except FileNotFoundError:
         linter = "eslint" if file_path.endswith((".ts", ".tsx", ".js", ".jsx")) else "ruff"
         sys.stderr.write(f"tribunal: WARNING: '{linter}' not found — lint-check rule skipped\n")
+        if rule.require_tool:
+            return True, f"Rule requires '{linter}' but it's not installed."
         return False, ""
 
 
@@ -464,6 +472,8 @@ def _condition_mypy_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return True, "mypy check timed out after 60s"
     except FileNotFoundError:
         sys.stderr.write("tribunal: WARNING: 'mypy' not found — mypy-check rule skipped\n")
+        if rule.require_tool:
+            return True, "Rule requires 'mypy' but it's not installed."
         return False, ""
 
 

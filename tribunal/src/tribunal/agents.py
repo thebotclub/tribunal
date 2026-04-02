@@ -105,6 +105,7 @@ def check_agent_policy(event: HookEvent) -> tuple[bool, str]:
     """Check if an agent action is allowed by multi-agent policy.
 
     Returns (allowed, reason). Called from hooks on SubagentStart and PreToolUse.
+    Supports agent_permissions matching by agent_type and task description patterns.
     """
     policy = load_multi_agent_policy(event.cwd)
 
@@ -142,7 +143,75 @@ def check_agent_policy(event: HookEvent) -> tuple[bool, str]:
                 f"Total cost: ${total_cost:.2f}."
             )
 
+    # Task-description-based permission matching
+    if policy.agent_permissions and event.tool_name:
+        agent_type = event.agent_type or "default"
+        perms = policy.agent_permissions.get(agent_type, policy.agent_permissions.get("default", {}))
+        allowed_tools = perms.get("allowed_tools", [])
+        blocked_tools = perms.get("blocked_tools", [])
+        # Blocked takes precedence
+        if blocked_tools and _tool_matches(event.tool_name, blocked_tools):
+            return False, (
+                f"Agent type '{agent_type}' is blocked from using '{event.tool_name}'."
+            )
+        if allowed_tools and not _tool_matches(event.tool_name, allowed_tools):
+            return False, (
+                f"Agent type '{agent_type}' is not allowed to use '{event.tool_name}'. "
+                f"Allowed: {allowed_tools}"
+            )
+
     return True, ""
+
+
+def _tool_matches(tool_name: str, patterns: list[str]) -> bool:
+    """Check if a tool name matches any pattern in the list (glob-style)."""
+    import fnmatch
+    return any(fnmatch.fnmatch(tool_name, p) for p in patterns)
+
+
+def log_agent_event(cwd: str, agent_id: str, event_type: str, details: dict[str, Any] | None = None) -> None:
+    """Write an audit entry to a per-agent audit trail.
+
+    Each agent gets its own JSONL file at .tribunal/agents/<agent_id>.jsonl
+    """
+    import json
+
+    agents_dir = Path(cwd) / ".tribunal" / "agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+
+    # Sanitize agent_id for filename
+    safe_id = "".join(c for c in agent_id if c.isalnum() or c in "-_")[:64] or "unknown"
+    trail_path = agents_dir / f"{safe_id}.jsonl"
+
+    entry = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "agent_id": agent_id,
+        "event": event_type,
+    }
+    if details:
+        entry["details"] = details
+
+    with open(trail_path, "a") as f:
+        f.write(json.dumps(entry, separators=(",", ":")) + "\n")
+
+
+def get_agent_trail(cwd: str, agent_id: str) -> list[dict[str, Any]]:
+    """Read the per-agent audit trail."""
+    import json
+
+    safe_id = "".join(c for c in agent_id if c.isalnum() or c in "-_")[:64] or "unknown"
+    trail_path = Path(cwd) / ".tribunal" / "agents" / f"{safe_id}.jsonl"
+    if not trail_path.is_file():
+        return []
+
+    entries = []
+    for line in trail_path.read_text().strip().split("\n"):
+        if line:
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                continue
+    return entries
 
 
 def format_agent_tree(cwd: str) -> str:
