@@ -1,352 +1,170 @@
 # Tribunal
 
-**Enterprise-grade discipline for Claude Code.** v1.2.0
+**Quality gates for AI-generated code.** v2.0.0
 
-Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol. It includes a fail-closed safety gate, lifecycle hooks for all 13 event types, multi-agent governance, an MCP server, review agents, cost governance, memory injection, rule packs, a programmatic SDK, a VS Code extension, a team dashboard API, and enterprise fleet tools.
+Tribunal scans code for secrets, enforces TDD, lints Python / TypeScript / Go, and outputs SARIF — in one command. Works everywhere: CI pipelines, pre-commit hooks, local dev. Agent-agnostic.
 
-> 24 modules · 432 tests · 25+ CLI commands
+> 5 checkers · SARIF 2.1.0 · GitHub Action · pre-commit hook
 
 ## Quick Start
 
 ```bash
 pip install tribunal
-cd your-project
-tribunal init
+tribunal ci .
 ```
 
-This generates:
-- `.tribunal/rules.yaml` — your project rules
-- `.claude/claudeconfig.json` — hook wiring for Claude Code
+That's it. Tribunal walks every source file, runs applicable checkers, and exits non-zero if anything fails.
 
 ## What It Does
 
-| Feature | How |
-|---------|-----|
-| **TDD enforcement** | Blocks file edits unless tests exist first |
-| **Secret scanning** | Prevents hardcoded credentials in code |
-| **Fail-closed gate** | Blocks on errors by default — never fails open silently |
-| **Audit trail** | Logs every tool call with automatic log rotation at 10 MB |
-| **Atomic I/O** | File locking + atomic writes prevent concurrent session corruption |
-| **Config validation** | Schema validation catches misconfigs on load |
-| **Cost budgets** | Per-session and daily budgets with analytics and anomaly detection |
-| **Hook lifecycle** | 13 event handlers — sessions, failures, files, permissions, compaction |
-| **Multi-agent governance** | Per-agent budgets, max concurrency, shared session budget, agent tree |
-| **Review agents** | 4 parallel agents (TDD, security, quality, spec) |
-| **MCP server** | Expose rules/audit as MCP tools for multi-agent workflows |
-| **Skills system** | 5 bundled skills + custom skill support |
-| **Memory injection** | Rules into Claude's memory with 200-file limit and LRU eviction |
-| **Model routing** | Cost-aware routing between models |
-| **Air-gapped bundles** | Package config for offline deployment |
-| **Audit dashboard** | HTML report + terminal stats for audit data |
-| **Marketplace** | Share and discover community rule bundles |
-| **Enterprise managed** | Fleet policies via `/etc/tribunal/config.yaml` |
-| **Rule packs** | Pre-built packs: SOC 2, Startup, Enterprise, Security |
-| **SDK** | Programmatic Python API via `TribunalSDK` class |
-| **VS Code extension** | Sidebar with rules, audit, cost, and agent tree views |
-| **Team dashboard** | REST API for centralized multi-project governance |
+| Checker | What it catches |
+|---------|----------------|
+| **Secrets** | AWS keys, GitHub tokens, Anthropic/OpenAI keys, private keys, JWTs, database URLs, generic API keys (14 patterns) |
+| **Python** | Ruff lint violations, Pyright/mypy type errors |
+| **TypeScript** | ESLint issues, `tsc --noEmit` type errors |
+| **Go** | `go vet` issues, golangci-lint findings |
+| **TDD** | Source files with no corresponding test file (Python, TypeScript, Go) |
 
-## Commands
+Secrets scanning runs on every file. Language checkers run only on matching extensions.
+
+## Output Formats
 
 ```bash
-# Foundation
-tribunal init            # Set up hooks in current project
-tribunal status          # Show active rules and audit summary
-tribunal rules           # List all rules and their config
-tribunal audit           # View recent audit log entries
-tribunal audit -n 50     # Show last 50 entries
-
-# Cost Management
-tribunal cost            # Show cost report
-tribunal cost budget 5   # Set $5 per-session budget
-tribunal cost budget 20 --daily  # Set $20 daily budget
-tribunal cost reset      # Reset session counters
-tribunal analytics       # Cost trends and anomaly detection
-tribunal analytics --json  # Machine-readable output
-
-# Skills & Permissions
-tribunal skills list     # List available skills
-tribunal skills install tdd-cycle  # Install a bundled skill
-tribunal skills create my-flow     # Create a custom skill
-tribunal permissions show          # List permission presets
-tribunal permissions apply strict  # Apply strict permissions
-
-# Review & Reports
-tribunal review          # Run all 4 review agents
-tribunal review --agents tdd,security  # Run specific agents
-tribunal report          # Text report for CI/CD
-tribunal report --format json  # JSON report for CI/CD
-
-# Configuration
-tribunal config          # Show resolved config (4-level cascade)
-tribunal plugin show     # Show plugin manifest
-tribunal plugin install  # Write manifest to .tribunal/
-
-# MCP Server
-tribunal mcp-serve       # Start MCP server (stdin/stdout)
-
-# Team & Enterprise
-tribunal sync export     # Export rules to YAML bundle
-tribunal sync import rules.yaml  # Import rules from bundle
-tribunal managed         # Show managed policy status
-tribunal model           # Show model routing config
-tribunal model resolve FileEdit  # Resolve model for a tool
-
-# Marketplace
-tribunal marketplace list       # List marketplace bundles
-tribunal marketplace register bundle.yaml  # Register a bundle
-tribunal marketplace install my-rules     # Install from marketplace
-tribunal marketplace remove my-rules      # Remove from marketplace
-
-# Memory
-tribunal memory list     # List tribunal memory entries
-tribunal memory inject   # Inject rules into Claude memory
-tribunal memory summary "Session done"  # Write session summary
-tribunal memory clear    # Clear tribunal memory entries
-
-# Air-Gapped Bundles
-tribunal bundle export   # Export self-contained bundle
-tribunal bundle import bundle.json  # Import bundle
-tribunal bundle validate bundle.json  # Validate bundle file
-
-# Dashboard
-tribunal dashboard       # Show audit stats in terminal
-tribunal dashboard html  # Export HTML audit report
-
-# Multi-Agent Governance
-tribunal agents tree     # Show agent tree with costs
-tribunal agents policy   # Show per-agent policies
-tribunal agents trail <id>  # View per-agent audit trail
-
-# Rule Packs
-tribunal pack list       # Show available rule packs
-tribunal pack install soc2  # Install a rule pack
-
-# Health & Maintenance
-tribunal doctor          # Run comprehensive health check
-tribunal audit rotate    # Rotate audit log
-tribunal config validate # Validate config files
-tribunal memory stats    # Show memory capacity stats
+tribunal ci .                    # Human-readable text (default)
+tribunal ci . --format sarif     # SARIF 2.1.0 for GitHub Code Scanning
+tribunal ci . --format json      # Machine-readable JSON
+tribunal ci . --output report.sarif  # Write to file
 ```
 
-## Rule Format
+## CLI Commands
 
-Rules live in `.tribunal/rules.yaml`:
+```bash
+tribunal ci .               # Run all checkers on current directory
+tribunal ci src/ tests/      # Check specific paths
+tribunal ci . --checkers secrets,python  # Run only specific checkers
+tribunal ci . --format sarif --output results.sarif  # SARIF output
+
+tribunal init                # Set up project config
+tribunal status              # Show active rules and config
+tribunal rules               # List configured rules
+tribunal audit               # View audit log
+tribunal config              # Show resolved config
+tribunal pack list           # Show available rule packs
+tribunal doctor              # Health check
+```
+
+## GitHub Action
+
+```yaml
+# .github/workflows/tribunal.yml
+name: Tribunal CI
+on: [push, pull_request]
+
+jobs:
+  tribunal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: thebotclub/tribunal@v2
+```
+
+The action installs Tribunal, runs `tribunal ci .` with SARIF output, and uploads results to GitHub Code Scanning automatically.
+
+## pre-commit Hook
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/thebotclub/tribunal
+    rev: v2.0.0
+    hooks:
+      - id: tribunal-ci        # Full check suite
+      - id: tribunal-secrets   # Secrets only (fast)
+```
+
+## Secrets Scanning
+
+14 built-in patterns covering:
+- AWS access keys and secret keys
+- GitHub personal access tokens (classic and fine-grained)
+- Anthropic and OpenAI API keys
+- Slack tokens and webhooks
+- Private keys (RSA, EC, etc.)
+- Database connection URLs with passwords
+- JWTs, Bearer tokens
+- Generic hex secrets and API keys
+
+### `.secretsignore`
+
+Suppress false positives with a `.secretsignore` file in your project root:
+
+```
+# Patterns (one per line, matched against file path)
+docs/examples/*
+test_fixtures/mock_keys.py
+```
+
+### Placeholder Detection
+
+Tribunal automatically skips placeholder values like `your-api-key-here`, `CHANGE_ME`, `xxxx`, and `TODO` patterns — only real secrets trigger findings.
+
+## TDD Enforcement
+
+For every source file, Tribunal checks whether a corresponding test file exists:
+
+| Source | Expected test |
+|--------|--------------|
+| `src/auth.py` | `tests/test_auth.py` or `test_auth.py` (sibling) |
+| `src/api.ts` | `src/api.test.ts` or `src/api.spec.ts` |
+| `internal/server.go` | `internal/server_test.go` |
+
+Files that are reasonably excluded (test files themselves, `__init__.py`, `index.ts`, `main.go`) are skipped.
+
+## Rule Packs
+
+Pre-built rule sets for common standards:
+
+```bash
+tribunal pack list           # Show available packs
+tribunal pack install soc2   # Install SOC 2 rules
+```
+
+Available: `soc2`, `startup`, `enterprise`, `security`.
+
+## Configuration
+
+Tribunal reads config from `.tribunal/config.yaml`:
 
 ```yaml
 rules:
   tdd-python:
-    trigger: PreToolUse
     match:
-      tool: "FileEdit|FileWrite"
       path: "*.py"
     action: block
     condition: no-matching-test
     message: "Write a failing test first."
 
   no-secrets:
-    trigger: PreToolUse
-    match:
-      tool: "FileEdit|FileWrite"
     action: block
     condition: contains-secret
-    message: "Possible secret detected. Use environment variables."
-
-  type-safety:
-    trigger: PostToolUse
-    match:
-      tool: FileEdit
-      path: "**/*.ts"
-    run: "npx tsc --noEmit --pretty"
-    action: block
-    message: "TypeScript errors found"
+    message: "Possible secret detected."
 ```
 
-### Built-in Conditions
-
-| Condition | Description |
-|-----------|-------------|
-| `no-matching-test` | No `test_<module>.py` exists for the edited `.py` file |
-| `no-matching-test-ts` | No `<module>.test.ts` exists for the edited `.ts` file |
-| `contains-secret` | Content matches common secret patterns (API keys, tokens, etc.) |
-| `cost-exceeded` | Session cost exceeds budget threshold |
-| `type-check` | Runs `tsc --noEmit` on TypeScript files |
-| `lint-check` | Runs eslint (JS/TS) or ruff (Python) on changed files |
-| `mypy-check` | Runs mypy on Python files |
-| `run-command` | Runs a custom shell command via `rule.run` |
-
-### Actions
-
-- `block` — Prevent the tool call (exit code 2)
-- `warn` — Log a warning but allow it (exit code 0)
-- `audit` — Silent logging only (exit code 0)
-
-## How It Works
-
-Tribunal plugs into Claude Code's [hook system](https://docs.anthropic.com/en/docs/claude-code/hooks):
-
-1. **`tribunal init`** writes hook config to `.claude/claudeconfig.json`
-2. Claude Code calls `tribunal-gate` on every tool use and lifecycle event
-3. The gate reads the hook event (JSON on stdin), routes lifecycle hooks, evaluates rules, and responds
-4. Results are logged to `.tribunal/audit.jsonl` (auto-rotated at 10 MB)
-
-The gate is **fail-closed by default** — if anything goes wrong parsing the event or evaluating rules, the tool call is blocked (exit code 2). Set `TRIBUNAL_FAIL_MODE=open` to override.
-
-## Hook Lifecycle
-
-Tribunal handles 13 lifecycle event types beyond rule evaluation:
-
-| Event | Handler |
-|-------|---------|
-| `SessionEnd` | Flush analytics, finalize cost, write session summary |
-| `PostToolUseFailure` | Track tool failure rates, detect flaky patterns |
-| `FileChanged` | Monitor external file changes in real time |
-| `CwdChanged` | Detect project context switches, reload rules |
-| `ConfigChange` | Alert on unauthorized settings modifications |
-| `PermissionRequest` | Log what was requested and why |
-| `PermissionDenied` | Track denied actions for compliance |
-| `PreCompact` | Save critical state before context compaction |
-| `PostCompact` | Re-inject rules after compaction |
-| `SubagentStart` / `SubagentStop` | Track sub-agent lifecycle |
-| `TaskCreated` / `TaskCompleted` | Task-level audit |
-
-All hooks are registered automatically by `tribunal init`.
-
-## Multi-Agent Governance
-
-Enforce policies across Claude Code coordinator mode — main agent + sub-agents:
-
-```yaml
-# .tribunal/config.yaml
-multi_agent:
-  max_concurrent_agents: 3
-  per_agent_budget: 1.00       # $1 per sub-agent
-  shared_session_budget: 5.00  # $5 total across all agents
-```
-
-```bash
-tribunal agents tree    # Show active/completed agents with costs
-```
-
-Per-agent cost budgets, max concurrency limits, and shared session budgets are enforced on every tool call.
-
-## MCP Server
-
-Tribunal exposes 6 MCP tools when running as a server:
-
-```bash
-tribunal mcp-serve  # Start JSON-RPC 2.0 server on stdin/stdout
-```
-
-Tools: `tribunal_evaluate_rule`, `tribunal_list_rules`, `tribunal_get_audit`, `tribunal_check_cost`, `tribunal_run_review`, `tribunal_get_config`
-
-## Review Agents
-
-Run 4 parallel review agents on your changed files:
-
-```bash
-tribunal review             # All agents
-tribunal review --agents tdd,security  # Specific agents
-```
-
-| Agent | Focus |
-|-------|-------|
-| `tdd` | Test coverage and TDD compliance |
-| `security` | Vulnerability detection |
-| `quality` | Code quality and maintainability |
-| `spec` | Spec conformance |
-
-## Configuration Cascade
-
-Tribunal resolves config from 4 levels (highest to lowest priority):
-
-1. **Managed** — Enterprise `/etc/tribunal/config.yaml`
-2. **User** — `~/.tribunal/config.yaml`
-3. **Project** — `.tribunal/config.yaml`
-4. **Environment** — `TRIBUNAL_*` env vars
-
-## Cost Management
-
-```bash
-tribunal cost budget 5.00        # $5 per session
-tribunal cost budget 20 --daily  # $20 per day
-tribunal analytics               # Trends and anomalies
-```
-
-When 80% of budget is used, Tribunal warns. When exceeded, it blocks.
-
-## Skills
-
-**Bundled skills:** `tdd-cycle`, `spec-review`, `security-audit`, `cost-report`, `quality-gate`
-
-```bash
-tribunal skills install tdd-cycle    # Install to .tribunal/skills/
-tribunal skills create my-workflow   # Create custom skill scaffold
-```
-
-## Memory Injection
-
-Inject Tribunal rules into Claude Code's memory for contextual surfacing:
-
-```bash
-tribunal memory inject   # Rules become memory entries
-tribunal memory summary "Fixed the auth bug"  # Session log
-```
-
-## Air-Gapped Deployment
-
-Package all rules, skills, and config into a single file for offline environments:
-
-```bash
-tribunal bundle export               # Creates .tribunal/bundle.json
-tribunal bundle import bundle.json   # Import into new project
-```
-
-## Permission Policies
-
-```bash
-tribunal permissions apply strict  # Apply strict deny/allow rules
-```
-
-Presets: `strict` (no curl/wget/sudo/force-push), `standard` (balanced), `minimal` (basic safety).
-
-## Rule Packs
-
-Pre-built rule sets for common compliance patterns:
-
-```bash
-tribunal pack list          # Show available packs
-tribunal pack install soc2  # Install SOC 2 rules
-```
-
-Available packs: `soc2`, `startup`, `enterprise`, `security`.
-
-## SDK
-
-Use Tribunal programmatically in Python:
+## Programmatic API
 
 ```python
-from tribunal.sdk import TribunalSDK
+from tribunal.checkers import run_checkers, collect_files
+from tribunal.sarif import findings_to_sarif, sarif_to_json
 
-sdk = TribunalSDK("/path/to/project")
+files = collect_files("/path/to/project")
+results = run_checkers(files, project_root="/path/to/project")
 
-# Evaluate an event
-result = sdk.evaluate("PreToolUse", tool_name="Bash")
-print(result.allowed, result.message)
+# Check pass/fail
+passed = all(r.passed for r in results)
 
-# Cost + audit
-snapshot = sdk.cost_snapshot()
-entries = sdk.audit_entries(limit=50)
-
-# Health check
-health = sdk.doctor()
-```
-
-## Team Dashboard
-
-Centralized governance API for multi-project teams:
-
-```bash
-tribunal-dashboard --port 8700  # Start dashboard server
+# Generate SARIF
+sarif = findings_to_sarif(results, "/path/to/project")
+print(sarif_to_json(sarif))
 ```
 
 REST endpoints: `/api/projects`, `/api/summary`, `/api/projects/{id}/audit|cost|agents`.
