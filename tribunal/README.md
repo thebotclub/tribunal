@@ -1,10 +1,10 @@
 # Tribunal
 
-**Enterprise-grade discipline for Claude Code.** v1.1.0
+**Enterprise-grade discipline for Claude Code.** v1.2.0
 
-Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol. It includes a fail-closed safety gate, lifecycle hooks for all 13 event types, multi-agent governance, an MCP server, review agents, cost governance, memory injection, and enterprise fleet tools.
+Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol. It includes a fail-closed safety gate, lifecycle hooks for all 13 event types, multi-agent governance, an MCP server, review agents, cost governance, memory injection, rule packs, a programmatic SDK, a VS Code extension, a team dashboard API, and enterprise fleet tools.
 
-> 21 modules · 371 tests · 21+ CLI commands
+> 24 modules · 432 tests · 25+ CLI commands
 
 ## Quick Start
 
@@ -40,6 +40,10 @@ This generates:
 | **Audit dashboard** | HTML report + terminal stats for audit data |
 | **Marketplace** | Share and discover community rule bundles |
 | **Enterprise managed** | Fleet policies via `/etc/tribunal/config.yaml` |
+| **Rule packs** | Pre-built packs: SOC 2, Startup, Enterprise, Security |
+| **SDK** | Programmatic Python API via `TribunalSDK` class |
+| **VS Code extension** | Sidebar with rules, audit, cost, and agent tree views |
+| **Team dashboard** | REST API for centralized multi-project governance |
 
 ## Commands
 
@@ -110,6 +114,18 @@ tribunal dashboard html  # Export HTML audit report
 
 # Multi-Agent Governance
 tribunal agents tree     # Show agent tree with costs
+tribunal agents policy   # Show per-agent policies
+tribunal agents trail <id>  # View per-agent audit trail
+
+# Rule Packs
+tribunal pack list       # Show available rule packs
+tribunal pack install soc2  # Install a rule pack
+
+# Health & Maintenance
+tribunal doctor          # Run comprehensive health check
+tribunal audit rotate    # Rotate audit log
+tribunal config validate # Validate config files
+tribunal memory stats    # Show memory capacity stats
 ```
 
 ## Rule Format
@@ -292,6 +308,58 @@ tribunal permissions apply strict  # Apply strict deny/allow rules
 ```
 
 Presets: `strict` (no curl/wget/sudo/force-push), `standard` (balanced), `minimal` (basic safety).
+
+## Rule Packs
+
+Pre-built rule sets for common compliance patterns:
+
+```bash
+tribunal pack list          # Show available packs
+tribunal pack install soc2  # Install SOC 2 rules
+```
+
+Available packs: `soc2`, `startup`, `enterprise`, `security`.
+
+## SDK
+
+Use Tribunal programmatically in Python:
+
+```python
+from tribunal.sdk import TribunalSDK
+
+sdk = TribunalSDK("/path/to/project")
+
+# Evaluate an event
+result = sdk.evaluate("PreToolUse", tool_name="Bash")
+print(result.allowed, result.message)
+
+# Cost + audit
+snapshot = sdk.cost_snapshot()
+entries = sdk.audit_entries(limit=50)
+
+# Health check
+health = sdk.doctor()
+```
+
+## Team Dashboard
+
+Centralized governance API for multi-project teams:
+
+```bash
+tribunal-dashboard --port 8700  # Start dashboard server
+```
+
+REST endpoints: `/api/projects`, `/api/summary`, `/api/projects/{id}/audit|cost|agents`.
+
+## VS Code Extension
+
+Visual governance in the editor sidebar:
+
+- **Rules Tree** — See all rules with action icons
+- **Audit Tree** — Browse recent events
+- **Cost Tree** — Track budget usage
+- **Agents Tree** — Monitor sub-agents
+- **Status Bar** — Rule count and block count at a glance
 
 ## Architecture
 

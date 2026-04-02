@@ -868,6 +868,25 @@ def cmd_agents(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_pack(args: argparse.Namespace) -> int:
+    """Rule pack management."""
+    from .packs import format_packs, install_pack, list_packs
+
+    sub = getattr(args, "pack_command", None)
+
+    if sub == "list" or sub is None:
+        print(format_packs())
+        return 0
+    elif sub == "install":
+        name = args.name
+        merge = not getattr(args, "replace", False)
+        ok, messages = install_pack(name, str(Path.cwd()), merge=merge)
+        for msg in messages:
+            print(f"  {'✓' if ok else '✗'} {msg}")
+        return 0 if ok else 1
+    return 0
+
+
 def cmd_doctor(args: argparse.Namespace) -> int:
     """Run health checks on Tribunal installation and project setup."""
     project_dir = Path.cwd()
@@ -1139,6 +1158,14 @@ def main() -> None:
     # doctor
     sub.add_parser("doctor", help="Run health checks on Tribunal setup")
 
+    # pack (rule packs)
+    pack_p = sub.add_parser("pack", help="Rule pack management")
+    pack_sub = pack_p.add_subparsers(dest="pack_command")
+    pack_sub.add_parser("list", help="List available rule packs")
+    pack_inst_p = pack_sub.add_parser("install", help="Install a rule pack")
+    pack_inst_p.add_argument("name", help="Pack name: soc2, startup, enterprise, security")
+    pack_inst_p.add_argument("--replace", action="store_true", help="Replace rules instead of merging")
+
     args = parser.parse_args()
 
     commands = {
@@ -1163,6 +1190,7 @@ def main() -> None:
         "dashboard": cmd_dashboard,
         "agents": cmd_agents,
         "doctor": cmd_doctor,
+        "pack": cmd_pack,
     }
 
     if args.command == "mcp-serve":

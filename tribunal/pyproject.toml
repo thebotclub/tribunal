@@ -41,6 +41,7 @@ Documentation = "https://github.com/thebotclub/tribunal/blob/main/README.md"
 tribunal = "tribunal.cli:main"
 tribunal-gate = "tribunal.gate:main"
 tribunal-mcp = "tribunal.mcp_server:main"
+tribunal-dashboard = "tribunal.dashboard_api:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/tribunal"]

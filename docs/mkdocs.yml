@@ -1,0 +1,56 @@
+site_name: Tribunal
+site_description: AI Governance Framework for Claude Code — rules, cost tracking, and compliance for AI-assisted development.
+site_url: https://tribunal.dev
+repo_url: https://github.com/thebotclub/tribunal.dev
+repo_name: thebotclub/tribunal.dev
+edit_uri: edit/main/docs/docs/
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: amber
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.tabs
+    - content.code.copy
+    - search.suggest
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quickstart.md
+  - Guides:
+    - Rules Reference: guides/rules.md
+    - Rule Packs: guides/packs.md
+    - Cost Tracking: guides/cost.md
+    - Audit Logging: guides/audit.md
+    - Multi-Agent: guides/multi-agent.md
+    - Memory Management: guides/memory.md
+  - API Reference:
+    - SDK: api/sdk.md
+    - Dashboard API: api/dashboard.md
+    - Gate Protocol: api/gate.md
+  - VS Code Extension: vscode.md
+  - Roadmap: roadmap.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
