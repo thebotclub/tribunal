@@ -19,9 +19,11 @@ def _lock_exclusive(fd: int) -> None:
     """Acquire exclusive advisory lock on file descriptor."""
     if platform.system() == "Windows":
         import msvcrt
+
         msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
     else:
         import fcntl
+
         fcntl.flock(fd, fcntl.LOCK_EX)
 
 
@@ -29,9 +31,11 @@ def _unlock(fd: int) -> None:
     """Release advisory lock on file descriptor."""
     if platform.system() == "Windows":
         import msvcrt
+
         msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
     else:
         import fcntl
+
         fcntl.flock(fd, fcntl.LOCK_UN)
 
 

@@ -81,11 +81,13 @@ def handle_permission_request(event: HookEvent) -> HookVerdict:
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
     granted = state.get("permissions_granted", [])
-    granted.append({
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "tool": event.tool_name or "",
-        "session_id": event.session_id or "",
-    })
+    granted.append(
+        {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "tool": event.tool_name or "",
+            "session_id": event.session_id or "",
+        }
+    )
     state["permissions_granted"] = granted[-100:]
     atomic_write_json(state_path, state)
 
@@ -101,11 +103,13 @@ def handle_permission_denied(event: HookEvent) -> HookVerdict:
     state = locked_read_json(state_path)
 
     denied = state.get("permissions_denied", [])
-    denied.append({
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "tool": event.tool_name or "",
-        "session_id": event.session_id or "",
-    })
+    denied.append(
+        {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "tool": event.tool_name or "",
+            "session_id": event.session_id or "",
+        }
+    )
     state["permissions_denied"] = denied[-100:]
 
     tool = event.tool_name or ""
@@ -114,11 +118,13 @@ def handle_permission_denied(event: HookEvent) -> HookVerdict:
         escalations = state.get("permission_escalations", [])
         for g in granted:
             if g.get("tool") == tool:
-                escalations.append({
-                    "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                    "tool": tool,
-                    "type": "grant-then-deny",
-                })
+                escalations.append(
+                    {
+                        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                        "tool": tool,
+                        "type": "grant-then-deny",
+                    }
+                )
                 break
         state["permission_escalations"] = escalations[-50:]
 
@@ -133,11 +139,13 @@ def handle_pre_compact(event: HookEvent) -> HookVerdict:
     state = locked_read_json(state_path)
 
     compactions = state.get("compaction_events", [])
-    compactions.append({
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "type": "pre",
-        "session_id": event.session_id or "",
-    })
+    compactions.append(
+        {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "type": "pre",
+            "session_id": event.session_id or "",
+        }
+    )
     state["compaction_events"] = compactions[-100:]
     state["compaction_count"] = state.get("compaction_count", 0) + 1
     atomic_write_json(state_path, state)
@@ -153,11 +161,13 @@ def handle_post_compact(event: HookEvent) -> HookVerdict:
     state = locked_read_json(state_path)
 
     compactions = state.get("compaction_events", [])
-    compactions.append({
-        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "type": "post",
-        "session_id": event.session_id or "",
-    })
+    compactions.append(
+        {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "type": "post",
+            "session_id": event.session_id or "",
+        }
+    )
     state["compaction_events"] = compactions[-100:]
     atomic_write_json(state_path, state)
 
@@ -197,7 +207,9 @@ def handle_subagent_stop(event: HookEvent) -> HookVerdict:
     agent_id = event.agent_id or event.session_id or "unknown"
     agents = state.get("active_agents", {})
     if agent_id in agents:
-        agents[agent_id]["stopped_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        agents[agent_id]["stopped_at"] = time.strftime(
+            "%Y-%m-%dT%H:%M:%SZ", time.gmtime()
+        )
         completed = state.get("completed_agents", [])
         completed.append(agents.pop(agent_id))
         state["completed_agents"] = completed[-50:]

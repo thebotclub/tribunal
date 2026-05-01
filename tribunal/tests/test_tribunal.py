@@ -1,13 +1,8 @@
 """Tests for the Tribunal package."""
 
 import json
-import os
-import sys
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
-import pytest
 
 from tribunal.protocol import HookEvent, HookVerdict, read_hook_event
 from tribunal.rules import Rule, RuleEngine, RuleMatch, _extract_path
@@ -55,13 +50,15 @@ class TestHookVerdict:
 
 class TestReadHookEvent:
     def test_parse_pretooluse(self):
-        data = json.dumps({
-            "hook_event_name": "PreToolUse",
-            "session_id": "abc",
-            "cwd": "/project",
-            "tool_name": "FileEdit",
-            "tool_input": {"file_path": "/project/main.py", "content": "x = 1"},
-        })
+        data = json.dumps(
+            {
+                "hook_event_name": "PreToolUse",
+                "session_id": "abc",
+                "cwd": "/project",
+                "tool_name": "FileEdit",
+                "tool_input": {"file_path": "/project/main.py", "content": "x = 1"},
+            }
+        )
         with patch("sys.stdin") as mock_stdin:
             mock_stdin.read.return_value = data
             event = read_hook_event()
@@ -83,40 +80,55 @@ class TestRuleMatch:
     def test_tool_matches(self):
         m = RuleMatch(tool="FileEdit|FileWrite")
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={},
         )
         assert m.matches(event)
 
     def test_tool_no_match(self):
         m = RuleMatch(tool="FileEdit|FileWrite")
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="Bash", tool_input={},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="Bash",
+            tool_input={},
         )
         assert not m.matches(event)
 
     def test_path_matches_glob(self):
         m = RuleMatch(tool="FileEdit", path="*.py")
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={"file_path": "main.py"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={"file_path": "main.py"},
         )
         assert m.matches(event)
 
     def test_path_no_match(self):
         m = RuleMatch(tool="FileEdit", path="*.py")
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={"file_path": "main.ts"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={"file_path": "main.ts"},
         )
         assert not m.matches(event)
 
     def test_no_constraints_matches_all(self):
         m = RuleMatch()
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="Bash", tool_input={},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="Bash",
+            tool_input={},
         )
         assert m.matches(event)
 
@@ -127,22 +139,31 @@ class TestRuleMatch:
 class TestExtractPath:
     def test_file_path_key(self):
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={"file_path": "/tmp/foo.py"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={"file_path": "/tmp/foo.py"},
         )
         assert _extract_path(event) == "/tmp/foo.py"
 
     def test_path_key(self):
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={"path": "/tmp/bar.py"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={"path": "/tmp/bar.py"},
         )
         assert _extract_path(event) == "/tmp/bar.py"
 
     def test_no_path(self):
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="Bash", tool_input={"command": "ls -la"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="Bash",
+            tool_input={"command": "ls -la"},
         )
         assert _extract_path(event) is None
 
@@ -182,8 +203,11 @@ rules:
 """)
         engine = RuleEngine.from_config(rules_yaml)
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
-            tool_name="FileEdit", tool_input={"file_path": "test.txt"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
+            tool_name="FileEdit",
+            tool_input={"file_path": "test.txt"},
         )
         verdict = engine.evaluate(event)
         assert not verdict.allow
@@ -203,48 +227,79 @@ rules:
 """)
         engine = RuleEngine.from_config(rules_yaml)
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
-            tool_name="Bash", tool_input={"command": "rm -rf /"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
+            tool_name="Bash",
+            tool_input={"command": "rm -rf /"},
         )
         verdict = engine.evaluate(event)
         assert verdict.allow
         assert "Be careful" in verdict.additional_context
 
     def test_evaluate_no_matching_rules_allows(self):
-        engine = RuleEngine([
-            Rule(name="py-only", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit", path="*.py"),
-                 action="block", message="Blocked"),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="py-only",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit", path="*.py"),
+                    action="block",
+                    message="Blocked",
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={"file_path": "main.ts"},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={"file_path": "main.ts"},
         )
         verdict = engine.evaluate(event)
         assert verdict.allow
 
     def test_wrong_trigger_skips(self):
-        engine = RuleEngine([
-            Rule(name="post-only", trigger="PostToolUse",
-                 match=RuleMatch(tool="FileEdit"),
-                 action="block", message="Blocked"),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="post-only",
+                    trigger="PostToolUse",
+                    match=RuleMatch(tool="FileEdit"),
+                    action="block",
+                    message="Blocked",
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={},
         )
         verdict = engine.evaluate(event)
         assert verdict.allow
 
     def test_disabled_rule_skipped(self):
-        engine = RuleEngine([
-            Rule(name="disabled", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit"),
-                 action="block", message="Blocked", enabled=False),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="disabled",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit"),
+                    action="block",
+                    message="Blocked",
+                    enabled=False,
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={},
         )
         verdict = engine.evaluate(event)
         assert verdict.allow
@@ -252,8 +307,11 @@ rules:
     def test_empty_rules_allows_everything(self):
         engine = RuleEngine([])
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
-            tool_name="FileEdit", tool_input={},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
+            tool_name="FileEdit",
+            tool_input={},
         )
         verdict = engine.evaluate(event)
         assert verdict.allow
@@ -264,14 +322,23 @@ rules:
 
 class TestTDDCondition:
     def test_blocks_py_without_test(self, tmp_path):
-        engine = RuleEngine([
-            Rule(name="tdd", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit", path="*.py"),
-                 action="block", condition="no-matching-test"),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="tdd",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit", path="*.py"),
+                    action="block",
+                    condition="no-matching-test",
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
-            tool_name="FileEdit", tool_input={"file_path": str(tmp_path / "app.py")},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
+            tool_name="FileEdit",
+            tool_input={"file_path": str(tmp_path / "app.py")},
         )
         verdict = engine.evaluate(event)
         assert not verdict.allow
@@ -283,26 +350,43 @@ class TestTDDCondition:
         tests_dir.mkdir()
         (tests_dir / "test_app.py").write_text("def test_pass(): pass")
 
-        engine = RuleEngine([
-            Rule(name="tdd", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit", path="*.py"),
-                 action="block", condition="no-matching-test"),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="tdd",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit", path="*.py"),
+                    action="block",
+                    condition="no-matching-test",
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
-            tool_name="FileEdit", tool_input={"file_path": str(tmp_path / "app.py")},
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
+            tool_name="FileEdit",
+            tool_input={"file_path": str(tmp_path / "app.py")},
         )
         verdict = engine.evaluate(event)
         assert verdict.allow
 
     def test_allows_test_files_themselves(self, tmp_path):
-        engine = RuleEngine([
-            Rule(name="tdd", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit", path="*.py"),
-                 action="block", condition="no-matching-test"),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="tdd",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit", path="*.py"),
+                    action="block",
+                    condition="no-matching-test",
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
             tool_name="FileEdit",
             tool_input={"file_path": str(tmp_path / "tests" / "test_app.py")},
         )
@@ -310,13 +394,21 @@ class TestTDDCondition:
         assert verdict.allow
 
     def test_allows_init_py(self, tmp_path):
-        engine = RuleEngine([
-            Rule(name="tdd", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit", path="*.py"),
-                 action="block", condition="no-matching-test"),
-        ])
+        engine = RuleEngine(
+            [
+                Rule(
+                    name="tdd",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit", path="*.py"),
+                    action="block",
+                    condition="no-matching-test",
+                ),
+            ]
+        )
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
             tool_name="FileEdit",
             tool_input={"file_path": str(tmp_path / "__init__.py")},
         )
@@ -330,17 +422,25 @@ class TestTDDCondition:
 class TestSecretCondition:
     def _make_event(self, content: str) -> HookEvent:
         return HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd="/tmp",
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd="/tmp",
             tool_name="FileEdit",
             tool_input={"file_path": "/tmp/config.py", "content": content},
         )
 
     def _engine(self):
-        return RuleEngine([
-            Rule(name="secrets", trigger="PreToolUse",
-                 match=RuleMatch(tool="FileEdit"),
-                 action="block", condition="contains-secret"),
-        ])
+        return RuleEngine(
+            [
+                Rule(
+                    name="secrets",
+                    trigger="PreToolUse",
+                    match=RuleMatch(tool="FileEdit"),
+                    action="block",
+                    condition="contains-secret",
+                ),
+            ]
+        )
 
     def test_blocks_api_key(self):
         verdict = self._engine().evaluate(
@@ -379,7 +479,9 @@ class TestSecretCondition:
 class TestAuditLog:
     def test_log_event_creates_jsonl(self, tmp_path):
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
             tool_name="FileEdit",
             tool_input={"file_path": str(tmp_path / "app.py")},
         )
@@ -395,7 +497,9 @@ class TestAuditLog:
 
     def test_log_blocked_event(self, tmp_path):
         event = HookEvent(
-            hook_event_name="PreToolUse", session_id="s1", cwd=str(tmp_path),
+            hook_event_name="PreToolUse",
+            session_id="s1",
+            cwd=str(tmp_path),
             tool_name="FileEdit",
             tool_input={"file_path": str(tmp_path / "app.py")},
         )
@@ -416,6 +520,7 @@ class TestCLIInit:
         monkeypatch.chdir(tmp_path)
         from tribunal.cli import cmd_init
         import argparse
+
         args = argparse.Namespace(force=False)
         result = cmd_init(args)
         assert result == 0
@@ -426,6 +531,7 @@ class TestCLIInit:
         monkeypatch.chdir(tmp_path)
         from tribunal.cli import cmd_init
         import argparse
+
         args = argparse.Namespace(force=False)
         cmd_init(args)
 
@@ -443,6 +549,7 @@ class TestCLIInit:
 
         from tribunal.cli import cmd_init
         import argparse
+
         args = argparse.Namespace(force=False)
         cmd_init(args)
 
@@ -454,6 +561,7 @@ class TestCLIInit:
         monkeypatch.chdir(tmp_path)
         from tribunal.cli import cmd_init
         import argparse
+
         args = argparse.Namespace(force=False)
         cmd_init(args)
         cmd_init(args)  # second call should not error

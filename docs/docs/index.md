@@ -1,19 +1,17 @@
 # Tribunal
 
-**AI Governance Framework for Claude Code**
+**Quality gates for AI-generated code**
 
-Tribunal enforces rules, tracks costs, manages compliance, and governs multi-agent workflows — all through Claude Code's native hook system.
+Tribunal enforces TDD, secret scanning, linting, and audit-friendly checks across CI, pre-commit, local development, and AI coding agent workflows.
 
 ## Features
 
 - **Rule Engine** — YAML-based rules that block, warn, or rewrite AI tool usage
-- **Cost Tracking** — Real-time budget enforcement with session and daily limits
-- **Audit Logging** — JSONL audit trail with rotation, analytics, and HTML reports
-- **Multi-Agent Governance** — Per-agent policies, task-based permissions, audit trails
+- **Audit Logging** — JSONL audit trail with rotation for hook-based workflows
 - **Rule Packs** — Pre-built rule sets (SOC 2, Startup, Enterprise, Security)
 - **Programmatic SDK** — Python API for embedding governance into custom tooling
 - **VS Code Extension** — Visual rule management, audit viewer, cost dashboard
-- **Team Dashboard** — HTTP API for centralized project governance
+- **Agent Hooks** — Optional hook integration for Claude Code-compatible event streams
 
 ## Quick Install
 

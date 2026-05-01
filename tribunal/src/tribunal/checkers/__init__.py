@@ -6,6 +6,7 @@ Checkers are registered by file extension and run via run_checkers().
 
 from __future__ import annotations
 
+from importlib import import_module
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable
@@ -79,8 +80,9 @@ def run_checkers(
     Returns:
         List of CheckResult objects.
     """
-    # Force registration of all checker modules
-    from . import go as _go, python as _python, secrets as _secrets, tdd as _tdd, typescript as _typescript  # noqa: F401
+    # Force registration of all checker modules.
+    for module in ("go", "python", "secrets", "tdd", "typescript"):
+        import_module(f"{__package__}.{module}")
 
     results: list[CheckResult] = []
 

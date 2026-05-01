@@ -48,7 +48,17 @@ def _has_typescript_test(file_path: Path) -> bool:
     name = file_path.name
 
     # Already a test file
-    if any(name.endswith(s) for s in (".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx", ".test.js", ".spec.js")):
+    if any(
+        name.endswith(s)
+        for s in (
+            ".test.ts",
+            ".spec.ts",
+            ".test.tsx",
+            ".spec.tsx",
+            ".test.js",
+            ".spec.js",
+        )
+    ):
         return True
 
     # Skip config/special files
@@ -179,7 +189,11 @@ def _parse_imports(file_path: Path) -> set[str]:
 @register([".py"])
 def check_tdd_python(file_path: Path, project_root: Path) -> CheckResult:
     """Check that Python source files have corresponding test files."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="tdd", file=rel)
 
     # Skip test files themselves
@@ -210,11 +224,25 @@ check_tdd_python._checker_name = "tdd"  # type: ignore[attr-defined]
 @register([".ts", ".tsx", ".js", ".jsx", ".mjs", ".mts"])
 def check_tdd_typescript(file_path: Path, project_root: Path) -> CheckResult:
     """Check that TypeScript/JS source files have corresponding test files."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="tdd", file=rel)
 
     name = file_path.name
-    if any(name.endswith(s) for s in (".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx", ".test.js", ".spec.js")):
+    if any(
+        name.endswith(s)
+        for s in (
+            ".test.ts",
+            ".spec.ts",
+            ".test.tsx",
+            ".spec.tsx",
+            ".test.js",
+            ".spec.js",
+        )
+    ):
         return result
     if name in {"index.ts", "index.tsx", "index.js", "main.ts", "main.js"}:
         return result
@@ -241,7 +269,11 @@ check_tdd_typescript._checker_name = "tdd"  # type: ignore[attr-defined]
 @register([".go"])
 def check_tdd_go(file_path: Path, project_root: Path) -> CheckResult:
     """Check that Go source files have corresponding test files."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="tdd", file=rel)
 
     if file_path.name.endswith("_test.go"):

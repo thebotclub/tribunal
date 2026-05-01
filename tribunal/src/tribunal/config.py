@@ -23,8 +23,10 @@ import yaml
 
 # ── TypedDict definitions for config schema ────────────────────────────────────
 
+
 class BudgetConfig(TypedDict, total=False):
     """Budget configuration section."""
+
     session_usd: float
     daily_usd: float
     warn_percent: float
@@ -32,6 +34,7 @@ class BudgetConfig(TypedDict, total=False):
 
 class AuditConfig(TypedDict, total=False):
     """Audit configuration section."""
+
     enabled: bool
     path: str
     max_bytes: int
@@ -40,6 +43,7 @@ class AuditConfig(TypedDict, total=False):
 
 class MultiAgentConfig(TypedDict, total=False):
     """Multi-agent governance section."""
+
     max_concurrent_agents: int
     per_agent_budget: float
     shared_session_budget: float
@@ -48,6 +52,7 @@ class MultiAgentConfig(TypedDict, total=False):
 
 class RuleConfig(TypedDict, total=False):
     """Individual rule definition."""
+
     trigger: str
     match: dict[str, str]
     action: str
@@ -60,6 +65,7 @@ class RuleConfig(TypedDict, total=False):
 
 class TribunalConfigDict(TypedDict, total=False):
     """Top-level config.yaml schema."""
+
     budget: BudgetConfig
     audit: AuditConfig
     skills_dirs: list[str]
@@ -85,7 +91,9 @@ class TribunalConfig:
     audit_path: str = ".tribunal/audit.jsonl"
     skills_dirs: list[str] = field(default_factory=list)
     permission_preset: str = ""
-    review_agents: list[str] = field(default_factory=lambda: ["tdd", "security", "quality", "spec"])
+    review_agents: list[str] = field(
+        default_factory=lambda: ["tdd", "security", "quality", "spec"]
+    )
     mcp_enabled: bool = False
     # Feature flags
     features: dict[str, bool] = field(default_factory=dict)
@@ -134,10 +142,23 @@ _KNOWN_KEYS: dict[str, type | tuple[type, ...]] = {
 _KNOWN_BUDGET_KEYS = {"session_usd", "daily_usd", "warn_percent"}
 _KNOWN_AUDIT_KEYS = {"enabled", "path", "max_bytes", "keep_rotated"}
 _VALID_ACTIONS = {"block", "warn", "log"}
-_VALID_TRIGGERS = {"PreToolUse", "PostToolUse", "SessionStart", "SessionEnd",
-                   "SubagentStart", "SubagentStop", "FileChanged", "CwdChanged",
-                   "PermissionRequest", "PermissionDenied", "ConfigChange",
-                   "TaskCreated", "TaskCompleted", "PreCompact", "PostCompact"}
+_VALID_TRIGGERS = {
+    "PreToolUse",
+    "PostToolUse",
+    "SessionStart",
+    "SessionEnd",
+    "SubagentStart",
+    "SubagentStop",
+    "FileChanged",
+    "CwdChanged",
+    "PermissionRequest",
+    "PermissionDenied",
+    "ConfigChange",
+    "TaskCreated",
+    "TaskCompleted",
+    "PreCompact",
+    "PostCompact",
+}
 
 
 def validate_config(data: dict[str, Any]) -> list[str]:
@@ -190,7 +211,9 @@ def validate_config(data: dict[str, Any]) -> list[str]:
                     continue
                 action = rdef.get("action", "block")
                 if action not in _VALID_ACTIONS:
-                    errors.append(f"Rule '{name}': invalid action '{action}' (expected: {_VALID_ACTIONS})")
+                    errors.append(
+                        f"Rule '{name}': invalid action '{action}' (expected: {_VALID_ACTIONS})"
+                    )
                 trigger = rdef.get("trigger", "")
                 if trigger and trigger not in _VALID_TRIGGERS:
                     errors.append(f"Rule '{name}': unknown trigger '{trigger}'")
@@ -263,6 +286,7 @@ def resolve_config(cwd: str | None = None) -> TribunalConfig:
     Cascade order: defaults → user → project → environment
     """
     import copy
+
     config = copy.deepcopy(_DEFAULTS)
 
     # 1. User config: ~/.tribunal/config.yaml

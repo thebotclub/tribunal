@@ -18,7 +18,7 @@ import sys
 
 from .audit import log_event
 from .hooks import LIFECYCLE_HANDLERS
-from .protocol import HookEvent, HookVerdict, read_hook_event, write_verdict
+from .protocol import read_hook_event, write_verdict
 from .rules import RuleEngine
 
 
@@ -47,11 +47,13 @@ def main() -> None:
         sys.exit(_fail_exit_code())
 
     try:
-        # Check for lifecycle event handlers first
+        # Lifecycle handlers own their response and audit logging. Tool-use
+        # events continue through the rule engine below.
         handler = LIFECYCLE_HANDLERS.get(event.hook_event_name)
         if handler:
             verdict = handler(event)
             write_verdict(verdict)
+            return
 
         # Load rules from the project
         engine = RuleEngine.from_project(event.cwd)

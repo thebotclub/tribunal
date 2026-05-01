@@ -1,6 +1,6 @@
 # tribunal.dev
 
-The website and Python CLI for [Tribunal](https://tribunal.dev) — enterprise-grade discipline for Claude Code.
+The website and Python CLI for [Tribunal](https://tribunal.dev) — local quality gates for AI-generated code.
 
 ## Repository Structure
 
@@ -19,14 +19,14 @@ tribunal.dev/
 
 ## Tribunal CLI
 
-Tribunal enforces TDD, quality gates, and team standards on Claude Code sessions via the hook protocol.
+Tribunal enforces TDD, secret scanning, linting, and team standards across CI, pre-commit, and AI coding agent workflows.
 
 ```bash
 pip install tribunal
 tribunal init
 ```
 
-**25+ CLI commands** covering: rules, audit, cost budgets, analytics, review agents, MCP server, skills, permissions, memory injection, air-gapped bundles, model routing, marketplace, dashboard, hook lifecycle, multi-agent governance, rule packs, SDK, and enterprise fleet management.
+**Core CLI commands** cover quality checks, project initialization, rule packs, audit logs, configuration inspection, and installation health checks.
 
 See [tribunal/README.md](tribunal/README.md) for full documentation.
 

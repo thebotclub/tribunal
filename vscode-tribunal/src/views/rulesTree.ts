@@ -63,7 +63,6 @@ export class RulesTreeProvider implements vscode.TreeDataProvider<RuleItem> {
     const rules: Record<string, RuleDef> = {};
     let inRules = false;
     let currentRule = "";
-    let indent = 0;
 
     for (const line of content.split("\n")) {
       const trimmed = line.trim();

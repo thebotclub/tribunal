@@ -21,7 +21,14 @@ def _is_test_file(path: Path) -> bool:
     name = path.name
     return any(
         name.endswith(suffix)
-        for suffix in (".test.ts", ".spec.ts", ".test.tsx", ".spec.tsx", ".test.js", ".spec.js")
+        for suffix in (
+            ".test.ts",
+            ".spec.ts",
+            ".test.tsx",
+            ".spec.tsx",
+            ".test.js",
+            ".spec.js",
+        )
     )
 
 
@@ -49,7 +56,11 @@ def _find_tool(tool_name: str, project_root: Path | None) -> str | None:
 @register(_TS_EXTENSIONS)
 def check_typescript(file_path: Path, project_root: Path) -> CheckResult:
     """Check TypeScript/JavaScript file with eslint and tsc."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="typescript", file=rel)
 
     if _is_test_file(file_path):
@@ -58,7 +69,11 @@ def check_typescript(file_path: Path, project_root: Path) -> CheckResult:
     ts_project_root = _find_project_root(file_path)
 
     eslint_bin = _find_tool("eslint", ts_project_root)
-    tsc_bin = _find_tool("tsc", ts_project_root) if file_path.suffix in {".ts", ".tsx", ".mts"} else None
+    tsc_bin = (
+        _find_tool("tsc", ts_project_root)
+        if file_path.suffix in {".ts", ".tsx", ".mts"}
+        else None
+    )
 
     if not (eslint_bin or tsc_bin):
         return result

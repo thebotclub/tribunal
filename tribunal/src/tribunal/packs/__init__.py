@@ -212,10 +212,16 @@ def install_pack(name: str, cwd: str, merge: bool = True) -> tuple[bool, list[st
         existing_rules = existing.get("rules", {})
         existing_rules.update(pack["rules"])
         existing["rules"] = existing_rules
-        rules_path.write_text(yaml.dump(existing, default_flow_style=False, sort_keys=False))
+        rules_path.write_text(
+            yaml.dump(existing, default_flow_style=False, sort_keys=False)
+        )
         messages.append(f"Merged {len(pack['rules'])} rules into existing rules.yaml")
     else:
-        rules_path.write_text(yaml.dump({"rules": pack["rules"]}, default_flow_style=False, sort_keys=False))
+        rules_path.write_text(
+            yaml.dump(
+                {"rules": pack["rules"]}, default_flow_style=False, sort_keys=False
+            )
+        )
         messages.append(f"Wrote {len(pack['rules'])} rules to rules.yaml")
 
     # Install config overrides
@@ -224,10 +230,14 @@ def install_pack(name: str, cwd: str, merge: bool = True) -> tuple[bool, list[st
         if config_path.is_file() and merge:
             existing = yaml.safe_load(config_path.read_text()) or {}
             existing.update(pack["config"])
-            config_path.write_text(yaml.dump(existing, default_flow_style=False, sort_keys=False))
+            config_path.write_text(
+                yaml.dump(existing, default_flow_style=False, sort_keys=False)
+            )
             messages.append("Merged pack config into config.yaml")
         else:
-            config_path.write_text(yaml.dump(pack["config"], default_flow_style=False, sort_keys=False))
+            config_path.write_text(
+                yaml.dump(pack["config"], default_flow_style=False, sort_keys=False)
+            )
             messages.append("Wrote pack config to config.yaml")
 
     messages.append(f"Pack '{name}' installed successfully.")

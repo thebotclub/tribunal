@@ -32,14 +32,10 @@ class PermissionPolicy:
         """Convert to Claude Code claudeconfig.json permissions format."""
         result: dict[str, Any] = {}
         if self.deny:
-            result["deny"] = [
-                {"tool": r.tool, "pattern": r.pattern}
-                for r in self.deny
-            ]
+            result["deny"] = [{"tool": r.tool, "pattern": r.pattern} for r in self.deny]
         if self.allow:
             result["allow"] = [
-                {"tool": r.tool, "pattern": r.pattern}
-                for r in self.allow
+                {"tool": r.tool, "pattern": r.pattern} for r in self.allow
             ]
         return result
 
@@ -96,8 +92,9 @@ def list_presets() -> list[str]:
     return list(_PRESETS.keys())
 
 
-def apply_policy(project_dir: str | Path, policy: PermissionPolicy,
-                 merge: bool = True) -> None:
+def apply_policy(
+    project_dir: str | Path, policy: PermissionPolicy, merge: bool = True
+) -> None:
     """Write permission policy to .claude/claudeconfig.json."""
     project = Path(project_dir)
     claude_dir = project / ".claude"

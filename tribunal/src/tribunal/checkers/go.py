@@ -21,7 +21,11 @@ def _is_test_file(path: Path) -> bool:
 @register([".go"])
 def check_go(file_path: Path, project_root: Path) -> CheckResult:
     """Check Go file with go vet and golangci-lint."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="go", file=rel)
 
     if _is_test_file(file_path):

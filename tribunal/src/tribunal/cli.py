@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import shutil
 import sys
 from pathlib import Path
@@ -136,8 +135,7 @@ def cmd_init(args: argparse.Namespace) -> int:
         for event, hooks in _CLAUDE_CONFIG["hooks"].items():
             existing_hooks = existing["hooks"].get(event, [])
             has_tribunal = any(
-                "tribunal-gate" in str(h.get("run", []))
-                for h in existing_hooks
+                "tribunal-gate" in str(h.get("run", [])) for h in existing_hooks
             )
             if not has_tribunal:
                 existing["hooks"][event] = existing_hooks + hooks
@@ -214,7 +212,9 @@ def cmd_status(args: argparse.Namespace) -> int:
         hook_count = sum(len(v) for v in hooks.values())
         has_tribunal = "tribunal-gate" in json.dumps(hooks)
         if has_tribunal:
-            print(f"  ✓ Hooks active — {hook_count} hook(s) in .claude/claudeconfig.json")
+            print(
+                f"  ✓ Hooks active — {hook_count} hook(s) in .claude/claudeconfig.json"
+            )
         else:
             print("  ⚠ Hooks exist but tribunal-gate not configured")
     else:
@@ -224,7 +224,9 @@ def cmd_status(args: argparse.Namespace) -> int:
         with open(rules_path) as f:
             data = yaml.safe_load(f) or {}
         rules = data.get("rules", {})
-        enabled = sum(1 for r in rules.values() if isinstance(r, dict) and r.get("enabled", True))
+        enabled = sum(
+            1 for r in rules.values() if isinstance(r, dict) and r.get("enabled", True)
+        )
         print(f"  ✓ {enabled} rule(s) active in .tribunal/rules.yaml")
         for name, rdef in rules.items():
             if isinstance(rdef, dict) and rdef.get("enabled", True):
@@ -296,6 +298,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
     if sub == "rotate":
         from .audit import rotate_audit_log
+
         if not audit_path.exists():
             print("  No audit log to rotate.")
             return 0
@@ -390,14 +393,18 @@ def cmd_ci(args: argparse.Namespace) -> int:
     This is the main CI/CD entrypoint. Runs all checkers (secrets, TDD,
     linting) and outputs results in SARIF, JSON, or text format.
     """
-    from .checkers import CheckResult, collect_files, run_checkers
+    from .checkers import collect_files, run_checkers
     from .sarif import findings_to_sarif, sarif_to_json
 
-    project_root = Path(args.project) if hasattr(args, "project") and args.project else Path.cwd()
+    project_root = (
+        Path(args.project) if hasattr(args, "project") and args.project else Path.cwd()
+    )
     project_root = project_root.resolve()
 
     # Determine files to check
-    paths = [Path(p) for p in args.files] if hasattr(args, "files") and args.files else None
+    paths = (
+        [Path(p) for p in args.files] if hasattr(args, "files") and args.files else None
+    )
     files = collect_files(project_root, paths=paths)
 
     if not files:
@@ -405,7 +412,11 @@ def cmd_ci(args: argparse.Namespace) -> int:
         return 0
 
     # Filter checkers if specified
-    checker_names = args.checkers.split(",") if hasattr(args, "checkers") and args.checkers else None
+    checker_names = (
+        args.checkers.split(",")
+        if hasattr(args, "checkers") and args.checkers
+        else None
+    )
 
     results = run_checkers(files, project_root, checkers=checker_names)
 
@@ -454,7 +465,13 @@ def cmd_ci(args: argparse.Namespace) -> int:
         print(f"\n  ⚖  Tribunal CI — {len(files)} file(s) checked\n")
         if all_findings:
             for finding in all_findings:
-                icon = "⛔" if finding.severity == "error" else "⚠️" if finding.severity == "warning" else "ℹ️"
+                icon = (
+                    "⛔"
+                    if finding.severity == "error"
+                    else "⚠️"
+                    if finding.severity == "warning"
+                    else "ℹ️"
+                )
                 loc = f":{finding.line}" if finding.line > 0 else ""
                 print(f"  {icon} {finding.file}{loc}")
                 print(f"    {finding.message}")
@@ -513,13 +530,17 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                         warnings += 1
                 if condition == "lint-check":
                     if not shutil.which("ruff") and not shutil.which("flake8"):
-                        print(f"  ⚠ Rule '{name}' needs ruff/flake8 but neither is installed")
+                        print(
+                            f"  ⚠ Rule '{name}' needs ruff/flake8 but neither is installed"
+                        )
                         warnings += 1
                 run_cmd = rdef.get("run", "")
                 if run_cmd:
                     cmd_name = run_cmd.split()[0] if run_cmd else ""
                     if cmd_name and not shutil.which(cmd_name):
-                        print(f"  ⚠ Rule '{name}' runs '{cmd_name}' but it's not installed")
+                        print(
+                            f"  ⚠ Rule '{name}' runs '{cmd_name}' but it's not installed"
+                        )
                         warnings += 1
         except yaml.YAMLError as e:
             print(f"  ✗ rules.yaml is invalid YAML: {e}")
@@ -538,7 +559,9 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             has_tribunal = "tribunal-gate" in json.dumps(hooks)
             if has_tribunal:
                 hook_count = sum(len(v) for v in hooks.values())
-                print(f"  ✓ claudeconfig.json — {hook_count} hook(s) with tribunal-gate")
+                print(
+                    f"  ✓ claudeconfig.json — {hook_count} hook(s) with tribunal-gate"
+                )
             else:
                 print("  ⚠ claudeconfig.json exists but tribunal-gate not configured")
                 warnings += 1
@@ -553,6 +576,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     cfg_path = tribunal_dir / "config.yaml"
     if cfg_path.is_file():
         from .config import validate_config
+
         try:
             data = yaml.safe_load(cfg_path.read_text()) or {}
             errors = validate_config(data)
@@ -605,7 +629,9 @@ def main() -> None:
 
     # init
     init_p = sub.add_parser("init", help="Set up Tribunal in the current project")
-    init_p.add_argument("--force", action="store_true", help="Overwrite existing config")
+    init_p.add_argument(
+        "--force", action="store_true", help="Overwrite existing config"
+    )
 
     # status
     sub.add_parser("status", help="Show current Tribunal status")
@@ -615,7 +641,9 @@ def main() -> None:
 
     # audit
     audit_p = sub.add_parser("audit", help="Show recent audit log")
-    audit_p.add_argument("-n", "--count", type=int, default=20, help="Number of entries")
+    audit_p.add_argument(
+        "-n", "--count", type=int, default=20, help="Number of entries"
+    )
     audit_sub = audit_p.add_subparsers(dest="audit_command")
     audit_sub.add_parser("rotate", help="Rotate the audit log file")
 
@@ -630,15 +658,30 @@ def main() -> None:
     pack_sub = pack_p.add_subparsers(dest="pack_command")
     pack_sub.add_parser("list", help="List available rule packs")
     pack_inst_p = pack_sub.add_parser("install", help="Install a rule pack")
-    pack_inst_p.add_argument("name", help="Pack name: soc2, startup, enterprise, security")
-    pack_inst_p.add_argument("--replace", action="store_true", help="Replace rules instead of merging")
+    pack_inst_p.add_argument(
+        "name", help="Pack name: soc2, startup, enterprise, security"
+    )
+    pack_inst_p.add_argument(
+        "--replace", action="store_true", help="Replace rules instead of merging"
+    )
 
     # ci
     ci_p = sub.add_parser("ci", help="Run quality checks (CI/CD entrypoint)")
-    ci_p.add_argument("files", nargs="*", help="Files or directories to check (default: project root)")
-    ci_p.add_argument("-f", "--format", choices=["text", "json", "sarif"], default="text", help="Output format")
+    ci_p.add_argument(
+        "files", nargs="*", help="Files or directories to check (default: project root)"
+    )
+    ci_p.add_argument(
+        "-f",
+        "--format",
+        choices=["text", "json", "sarif"],
+        default="text",
+        help="Output format",
+    )
     ci_p.add_argument("-o", "--output", help="Write output to file instead of stdout")
-    ci_p.add_argument("--checkers", help="Comma-separated list of checkers: secrets,tdd,python,typescript,go")
+    ci_p.add_argument(
+        "--checkers",
+        help="Comma-separated list of checkers: secrets,tdd,python,typescript,go",
+    )
     ci_p.add_argument("--project", help="Project root directory (default: cwd)")
 
     # doctor

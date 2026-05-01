@@ -105,17 +105,19 @@ class RuleEngine:
                 tool=match_data.get("tool"),
                 path=match_data.get("path"),
             )
-            rules.append(Rule(
-                name=name,
-                trigger=rdef.get("trigger", "PreToolUse"),
-                match=match,
-                action=rdef.get("action", "block"),
-                message=rdef.get("message", f"Blocked by rule: {name}"),
-                condition=rdef.get("condition"),
-                run=rdef.get("run"),
-                enabled=rdef.get("enabled", True),
-                require_tool=rdef.get("require_tool", False),
-            ))
+            rules.append(
+                Rule(
+                    name=name,
+                    trigger=rdef.get("trigger", "PreToolUse"),
+                    match=match,
+                    action=rdef.get("action", "block"),
+                    message=rdef.get("message", f"Blocked by rule: {name}"),
+                    condition=rdef.get("condition"),
+                    run=rdef.get("run"),
+                    enabled=rdef.get("enabled", True),
+                    require_tool=rdef.get("require_tool", False),
+                )
+            )
 
         return cls(rules)
 
@@ -149,18 +151,18 @@ class RuleEngine:
 
             blocked = rule.action == "block"
             message = msg or rule.message
-            results.append(RuleResult(
-                rule=rule,
-                triggered=True,
-                blocked=blocked,
-                message=message,
-            ))
+            results.append(
+                RuleResult(
+                    rule=rule,
+                    triggered=True,
+                    blocked=blocked,
+                    message=message,
+                )
+            )
 
         blocking = [r for r in results if r.blocked]
         if blocking:
-            reasons = "\n".join(
-                f"⛔ [{r.rule.name}] {r.message}" for r in blocking
-            )
+            reasons = "\n".join(f"⛔ [{r.rule.name}] {r.message}" for r in blocking)
             return HookVerdict(
                 allow=False,
                 reason=f"Tribunal blocked this operation:\n{reasons}",
@@ -168,9 +170,7 @@ class RuleEngine:
 
         warnings = [r for r in results if r.triggered and not r.blocked]
         if warnings:
-            context = "\n".join(
-                f"⚠️ [{r.rule.name}] {r.message}" for r in warnings
-            )
+            context = "\n".join(f"⚠️ [{r.rule.name}] {r.message}" for r in warnings)
             return HookVerdict(allow=True, additional_context=context)
 
         return HookVerdict(allow=True)
@@ -222,17 +222,22 @@ def _condition_no_matching_test(rule: Rule, event: HookEvent) -> tuple[bool, str
 
     file_dir = os.path.dirname(file_path)
     if file_dir:
-        test_patterns.extend([
-            os.path.join(file_dir, f"test_{module_name}.py"),
-            os.path.join(file_dir, "tests", f"test_{module_name}.py"),
-        ])
+        test_patterns.extend(
+            [
+                os.path.join(file_dir, f"test_{module_name}.py"),
+                os.path.join(file_dir, "tests", f"test_{module_name}.py"),
+            ]
+        )
 
     for pattern in test_patterns:
         full = os.path.join(cwd, pattern)
         if os.path.exists(full):
             return False, ""
 
-    return True, f"No test file found for {file_path}. Write tests first (e.g. tests/test_{module_name}.py)."
+    return (
+        True,
+        f"No test file found for {file_path}. Write tests first (e.g. tests/test_{module_name}.py).",
+    )
 
 
 def _condition_contains_secret(rule: Rule, event: HookEvent) -> tuple[bool, str]:
@@ -254,18 +259,27 @@ def _condition_contains_secret(rule: Rule, event: HookEvent) -> tuple[bool, str]
 
     secret_patterns = [
         (r'(?:api[_-]?key|apikey)\s*[=:]\s*["\']?[A-Za-z0-9_\-]{20,}', "API key"),
-        (r'(?:secret|password|passwd|pwd)\s*[=:]\s*["\']?[^\s"\']{8,}', "password/secret"),
+        (
+            r'(?:secret|password|passwd|pwd)\s*[=:]\s*["\']?[^\s"\']{8,}',
+            "password/secret",
+        ),
         (r'(?:token)\s*[=:]\s*["\']?[A-Za-z0-9_\-\.]{20,}', "auth token"),
-        (r'(?:aws_access_key_id|aws_secret_access_key)\s*[=:]\s*["\']?[A-Za-z0-9/+=]{16,}', "AWS credential"),
-        (r'-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----', "private key"),
-        (r'sk-[A-Za-z0-9]{20,}', "OpenAI-style API key"),
-        (r'ghp_[A-Za-z0-9]{36}', "GitHub personal access token"),
-        (r'xox[bpras]-[A-Za-z0-9\-]{10,}', "Slack token"),
+        (
+            r'(?:aws_access_key_id|aws_secret_access_key)\s*[=:]\s*["\']?[A-Za-z0-9/+=]{16,}',
+            "AWS credential",
+        ),
+        (r"-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----", "private key"),
+        (r"sk-[A-Za-z0-9]{20,}", "OpenAI-style API key"),
+        (r"ghp_[A-Za-z0-9]{36}", "GitHub personal access token"),
+        (r"xox[bpras]-[A-Za-z0-9\-]{10,}", "Slack token"),
     ]
 
     for pattern, label in secret_patterns:
         if re.search(pattern, content, re.IGNORECASE):
-            return True, f"Possible {label} detected in code. Use environment variables instead."
+            return (
+                True,
+                f"Possible {label} detected in code. Use environment variables instead.",
+            )
 
     return False, ""
 
@@ -292,15 +306,25 @@ def _condition_run_command(rule: Rule, event: HookEvent) -> tuple[bool, str]:
             output = (result.stdout + result.stderr).strip()
             if len(output) > 500:
                 output = output[:500] + "\n... (truncated)"
-            return True, f"Command failed (exit {result.returncode}):\n{output}" if output else f"Command failed (exit {result.returncode})"
+            return (
+                True,
+                f"Command failed (exit {result.returncode}):\n{output}"
+                if output
+                else f"Command failed (exit {result.returncode})",
+            )
         return False, ""
     except subprocess.TimeoutExpired:
         return True, f"Command timed out after 30s: {rule.run}"
     except (FileNotFoundError, NotADirectoryError, OSError):
         cmd_name = rule.run.split()[0] if rule.run else "unknown"
-        sys.stderr.write(f"tribunal: WARNING: command '{cmd_name}' not found for rule '{rule.name}'\n")
+        sys.stderr.write(
+            f"tribunal: WARNING: command '{cmd_name}' not found for rule '{rule.name}'\n"
+        )
         if rule.require_tool:
-            return True, f"Rule '{rule.name}' requires '{cmd_name}' but it's not installed."
+            return (
+                True,
+                f"Rule '{rule.name}' requires '{cmd_name}' but it's not installed.",
+            )
         return False, ""
 
 
@@ -335,7 +359,10 @@ def _condition_no_matching_test_ts(rule: Rule, event: HookEvent) -> tuple[bool, 
         if os.path.exists(check):
             return False, ""
 
-    return True, f"No test file found for {file_path}. Write tests first (e.g. {module_name}.test.{ext})."
+    return (
+        True,
+        f"No test file found for {file_path}. Write tests first (e.g. {module_name}.test.{ext}).",
+    )
 
 
 def _condition_type_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
@@ -347,6 +374,7 @@ def _condition_type_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return False, ""
 
     import subprocess
+
     try:
         result = subprocess.run(
             ["npx", "tsc", "--noEmit", "--pretty"],
@@ -364,7 +392,9 @@ def _condition_type_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return True, "TypeScript type-check timed out after 60s"
     except FileNotFoundError:
-        sys.stderr.write("tribunal: WARNING: 'npx tsc' not found — type-check rule skipped\n")
+        sys.stderr.write(
+            "tribunal: WARNING: 'npx tsc' not found — type-check rule skipped\n"
+        )
         if rule.require_tool:
             return True, "Rule requires 'tsc' but it's not installed."
         return False, ""
@@ -402,8 +432,12 @@ def _condition_lint_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return True, "Lint check timed out after 30s"
     except FileNotFoundError:
-        linter = "eslint" if file_path.endswith((".ts", ".tsx", ".js", ".jsx")) else "ruff"
-        sys.stderr.write(f"tribunal: WARNING: '{linter}' not found — lint-check rule skipped\n")
+        linter = (
+            "eslint" if file_path.endswith((".ts", ".tsx", ".js", ".jsx")) else "ruff"
+        )
+        sys.stderr.write(
+            f"tribunal: WARNING: '{linter}' not found — lint-check rule skipped\n"
+        )
         if rule.require_tool:
             return True, f"Rule requires '{linter}' but it's not installed."
         return False, ""
@@ -418,6 +452,7 @@ def _condition_mypy_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return False, ""
 
     import subprocess
+
     try:
         result = subprocess.run(
             ["mypy", "--no-error-summary", file_path],
@@ -435,7 +470,9 @@ def _condition_mypy_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
     except subprocess.TimeoutExpired:
         return True, "mypy check timed out after 60s"
     except FileNotFoundError:
-        sys.stderr.write("tribunal: WARNING: 'mypy' not found — mypy-check rule skipped\n")
+        sys.stderr.write(
+            "tribunal: WARNING: 'mypy' not found — mypy-check rule skipped\n"
+        )
         if rule.require_tool:
             return True, "Rule requires 'mypy' but it's not installed."
         return False, ""

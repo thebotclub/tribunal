@@ -34,7 +34,10 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
         "secrets/database-url",
     ),
     # JWT
-    (r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}", "secrets/jwt"),
+    (
+        r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}",
+        "secrets/jwt",
+    ),
     # Bearer tokens
     (r'["\']Bearer\s+[A-Za-z0-9\-_.~+/]{20,}["\']', "secrets/bearer-token"),
     # Generic API key assignments
@@ -54,14 +57,34 @@ _COMPILED_PATTERNS = [(re.compile(pat), rule_id) for pat, rule_id in SECRET_PATT
 # ── Skip lists ────────────────────────────────────────────────────────────────
 
 SKIP_EXTENSIONS = {
-    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp",
-    ".woff", ".woff2", ".ttf", ".eot",
-    ".zip", ".tar", ".gz", ".bz2",
-    ".lock", ".sum",
-    ".pyc", ".pyo", ".so", ".dylib", ".dll",
-    ".min.js", ".min.css",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".svg",
+    ".ico",
+    ".webp",
+    ".woff",
+    ".woff2",
+    ".ttf",
+    ".eot",
+    ".zip",
+    ".tar",
+    ".gz",
+    ".bz2",
+    ".lock",
+    ".sum",
+    ".pyc",
+    ".pyo",
+    ".so",
+    ".dylib",
+    ".dll",
+    ".min.js",
+    ".min.css",
     ".map",
-    ".pdf", ".doc", ".docx",
+    ".pdf",
+    ".doc",
+    ".docx",
 }
 
 SKIP_FILENAMES = {
@@ -126,7 +149,11 @@ def _is_ignored(text: str, patterns: list[re.Pattern[str]]) -> bool:
 @register_global
 def check_secrets(file_path: Path, project_root: Path) -> CheckResult:
     """Scan a file for hardcoded secrets and credentials."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="secrets", file=rel)
 
     # Skip binary/non-source files

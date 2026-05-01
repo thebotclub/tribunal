@@ -6,30 +6,33 @@
 tribunal init
 ```
 
-## 2. Test Your Rules
+## 2. Inspect Your Rules
 
 ```bash
-tribunal rules list
-tribunal rules test --tool Bash --input '{"command": "rm -rf /"}'
+tribunal rules
 ```
 
-## 3. Start Coding with Claude Code
+## 3. Run Quality Checks
 
-Rules are enforced automatically through Claude Code hooks. Every tool call is evaluated against your rules before execution.
+```bash
+tribunal ci .
+```
+
+Use `--format sarif` for GitHub Code Scanning or `--format json` for custom automation.
 
 ## 4. Check the Audit Log
 
 ```bash
-tribunal audit show
-tribunal audit stats
+tribunal audit
 ```
 
-## 5. Monitor Costs
+## 5. Add Hook Enforcement
 
 ```bash
-tribunal cost show
-tribunal cost set-budget --session 5.00 --daily 20.00
+tribunal init
 ```
+
+When used with Claude Code hooks, every configured tool event is evaluated against your rules before execution.
 
 ## 6. Run a Health Check
 
@@ -37,20 +40,6 @@ tribunal cost set-budget --session 5.00 --daily 20.00
 tribunal doctor
 ```
 
-## Using the SDK
+## 7. Add CI or pre-commit
 
-```python
-from tribunal.sdk import TribunalSDK
-
-sdk = TribunalSDK("/path/to/project")
-
-# Evaluate an event
-result = sdk.evaluate("PreToolUse", tool_name="Bash")
-print(f"Allowed: {result.allowed}")
-
-# Check costs
-snapshot = sdk.cost_snapshot()
-
-# List rules
-rules = sdk.list_rules()
-```
+See the repository README for GitHub Action and pre-commit examples.

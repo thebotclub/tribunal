@@ -1,6 +1,6 @@
 # Tribunal
 
-**Quality gates for AI-generated code.** v2.0.0
+**Quality gates for AI-generated code.** v2.0.1
 
 Tribunal scans code for secrets, enforces TDD, lints Python / TypeScript / Go, and outputs SARIF — in one command. Works everywhere: CI pipelines, pre-commit hooks, local dev. Agent-agnostic.
 
@@ -65,7 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: thebotclub/tribunal@v2
+      - uses: thebotclub/tribunal.dev/tribunal@v2.0.1
 ```
 
 The action installs Tribunal, runs `tribunal ci .` with SARIF output, and uploads results to GitHub Code Scanning automatically.
@@ -75,8 +75,8 @@ The action installs Tribunal, runs `tribunal ci .` with SARIF output, and upload
 ```yaml
 # .pre-commit-config.yaml
 repos:
-  - repo: https://github.com/thebotclub/tribunal
-    rev: v2.0.0
+  - repo: https://github.com/thebotclub/tribunal.dev
+    rev: v2.0.1
     hooks:
       - id: tribunal-ci        # Full check suite
       - id: tribunal-secrets   # Secrets only (fast)
@@ -192,7 +192,7 @@ Visual governance in the editor sidebar:
 └── bundle.json         # Air-gapped bundle (export)
 
 .claude/
-├── claudeconfig.json   # Hook wiring
+├── claudeconfig.json   # Hook wiring for Claude Code
 └── memory/             # Tribunal memory entries
     ├── tribunal-rule-*.md
     └── tribunal-session-*.md

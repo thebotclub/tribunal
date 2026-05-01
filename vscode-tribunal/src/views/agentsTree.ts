@@ -7,6 +7,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 interface AgentState {
+  agent_id?: string;
   agent_type?: string;
   started_at?: string;
   stopped_at?: string;
@@ -55,7 +56,7 @@ export class AgentsTreeProvider implements vscode.TreeDataProvider<AgentItem> {
       const completed = (state.completed_agents || []).slice(-5);
       for (const info of completed as AgentState[]) {
         items.push(new AgentItem(
-          `⚫ ${(info as any).agent_id || "agent"}`,
+          `⚫ ${info.agent_id || "agent"}`,
           "circle-slash",
           `$${(info.cost_usd || 0).toFixed(4)}`,
           `${info.started_at || ""} → ${info.stopped_at || ""}`,

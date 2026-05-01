@@ -3,7 +3,7 @@
 ## Requirements
 
 - Python 3.10+
-- Claude Code (for hook integration)
+- Optional: Claude Code or another hook-capable AI coding workflow for live gate enforcement
 
 ## Install from PyPI
 
@@ -29,7 +29,7 @@ This creates:
 
 - `.tribunal/rules.yaml` — your governance rules
 - `.tribunal/config.yaml` — Tribunal configuration
-- `.claude/claudeconfig.json` — Claude Code hook registration
+- `.claude/claudeconfig.json` — Claude Code hook registration when hook enforcement is used
 
 ## Install a Rule Pack
 

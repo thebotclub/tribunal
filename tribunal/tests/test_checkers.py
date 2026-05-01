@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
+import sys
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
@@ -74,7 +73,14 @@ class TestDataclasses:
             checker="tdd",
             file="app.py",
             findings=[
-                Finding(checker="tdd", file="app.py", line=0, severity="warning", message="no test", rule_id="tdd/missing"),
+                Finding(
+                    checker="tdd",
+                    file="app.py",
+                    line=0,
+                    severity="warning",
+                    message="no test",
+                    rule_id="tdd/missing",
+                ),
             ],
         )
         assert r.passed is True  # warnings don't fail
@@ -84,7 +90,14 @@ class TestDataclasses:
             checker="secrets",
             file="app.py",
             findings=[
-                Finding(checker="secrets", file="app.py", line=5, severity="error", message="secret", rule_id="secrets/aws"),
+                Finding(
+                    checker="secrets",
+                    file="app.py",
+                    line=5,
+                    severity="error",
+                    message="secret",
+                    rule_id="secrets/aws",
+                ),
             ],
         )
         assert r.passed is False
@@ -110,7 +123,9 @@ class TestSecretsChecker:
 
     def test_detects_private_key(self, tmp_project: Path):
         f = tmp_project / "cert.py"
-        f.write_text('key = """-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK...\n-----END RSA PRIVATE KEY-----"""\n')
+        f.write_text(
+            'key = """-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAK...\n-----END RSA PRIVATE KEY-----"""\n'
+        )
         result = check_secrets(f, tmp_project)
         assert len(result.findings) == 1
         assert result.findings[0].rule_id == "secrets/private-key"
@@ -158,7 +173,9 @@ class TestSecretsChecker:
 
     def test_line_numbers(self, tmp_project: Path):
         f = tmp_project / "multi.py"
-        f.write_text('line1 = "clean"\nline2 = "clean"\nline3 = "AKIAIOSFODNN7EXAMPLE"\n')
+        f.write_text(
+            'line1 = "clean"\nline2 = "clean"\nline3 = "AKIAIOSFODNN7EXAMPLE"\n'
+        )
         result = check_secrets(f, tmp_project)
         assert len(result.findings) == 1
         assert result.findings[0].line == 3
@@ -365,7 +382,10 @@ class TestSARIF:
         assert len(run["results"]) == 1
         assert run["results"][0]["ruleId"] == "secrets/aws-access-key"
         assert run["results"][0]["level"] == "error"
-        assert run["results"][0]["locations"][0]["physicalLocation"]["region"]["startLine"] == 5
+        assert (
+            run["results"][0]["locations"][0]["physicalLocation"]["region"]["startLine"]
+            == 5
+        )
 
     def test_multiple_findings(self, tmp_project: Path):
         results = [
@@ -373,15 +393,36 @@ class TestSARIF:
                 checker="secrets",
                 file="app.py",
                 findings=[
-                    Finding(checker="secrets", file="app.py", line=1, severity="error", message="a", rule_id="secrets/a"),
-                    Finding(checker="secrets", file="app.py", line=2, severity="error", message="b", rule_id="secrets/b"),
+                    Finding(
+                        checker="secrets",
+                        file="app.py",
+                        line=1,
+                        severity="error",
+                        message="a",
+                        rule_id="secrets/a",
+                    ),
+                    Finding(
+                        checker="secrets",
+                        file="app.py",
+                        line=2,
+                        severity="error",
+                        message="b",
+                        rule_id="secrets/b",
+                    ),
                 ],
             ),
             CheckResult(
                 checker="tdd",
                 file="app.py",
                 findings=[
-                    Finding(checker="tdd", file="app.py", line=0, severity="warning", message="no test", rule_id="tdd/missing"),
+                    Finding(
+                        checker="tdd",
+                        file="app.py",
+                        line=0,
+                        severity="warning",
+                        message="no test",
+                        rule_id="tdd/missing",
+                    ),
                 ],
             ),
         ]
@@ -408,9 +449,30 @@ class TestSARIF:
                 checker="test",
                 file="f.py",
                 findings=[
-                    Finding(checker="test", file="f.py", line=1, severity="error", message="e", rule_id="r1"),
-                    Finding(checker="test", file="f.py", line=2, severity="warning", message="w", rule_id="r2"),
-                    Finding(checker="test", file="f.py", line=3, severity="info", message="i", rule_id="r3"),
+                    Finding(
+                        checker="test",
+                        file="f.py",
+                        line=1,
+                        severity="error",
+                        message="e",
+                        rule_id="r1",
+                    ),
+                    Finding(
+                        checker="test",
+                        file="f.py",
+                        line=2,
+                        severity="warning",
+                        message="w",
+                        rule_id="r2",
+                    ),
+                    Finding(
+                        checker="test",
+                        file="f.py",
+                        line=3,
+                        severity="info",
+                        message="i",
+                        rule_id="r3",
+                    ),
                 ],
             )
         ]
@@ -424,7 +486,14 @@ class TestSARIF:
                 checker="tdd",
                 file="app.py",
                 findings=[
-                    Finding(checker="tdd", file="app.py", line=0, severity="warning", message="no test", rule_id="tdd/x"),
+                    Finding(
+                        checker="tdd",
+                        file="app.py",
+                        line=0,
+                        severity="warning",
+                        message="no test",
+                        rule_id="tdd/x",
+                    ),
                 ],
             )
         ]
@@ -494,7 +563,9 @@ class TestRunCheckers:
         f.write_text('SECRET = "AKIAIOSFODNN7EXAMPLE"\n')
         results = run_checkers([f], tmp_project, checkers=["tdd"])
         # Should NOT have secrets findings since we filtered to tdd only
-        secret_findings = [f for r in results for f in r.findings if f.checker == "secrets"]
+        secret_findings = [
+            f for r in results for f in r.findings if f.checker == "secrets"
+        ]
         assert len(secret_findings) == 0
 
     def test_clean_file(self, tmp_project: Path):
@@ -522,7 +593,15 @@ class TestCLICommand:
         f = tmp_project / "config.py"
         f.write_text('KEY = "AKIAIOSFODNN7EXAMPLE"\n')
         result = subprocess.run(
-            ["python", "-m", "tribunal", "ci", str(f), "--project", str(tmp_project)],
+            [
+                sys.executable,
+                "-m",
+                "tribunal",
+                "ci",
+                str(f),
+                "--project",
+                str(tmp_project),
+            ],
             capture_output=True,
             text=True,
             cwd=str(tmp_project),
@@ -533,7 +612,17 @@ class TestCLICommand:
         f = tmp_project / "clean.py"
         f.write_text('import os\nDB = os.environ["DB"]\n')
         result = subprocess.run(
-            ["python", "-m", "tribunal", "ci", str(f), "--format", "json", "--project", str(tmp_project)],
+            [
+                sys.executable,
+                "-m",
+                "tribunal",
+                "ci",
+                str(f),
+                "--format",
+                "json",
+                "--project",
+                str(tmp_project),
+            ],
             capture_output=True,
             text=True,
             cwd=str(tmp_project),
@@ -545,9 +634,19 @@ class TestCLICommand:
 
     def test_ci_sarif_output(self, tmp_project: Path):
         f = tmp_project / "clean.py"
-        f.write_text('import os\n')
+        f.write_text("import os\n")
         result = subprocess.run(
-            ["python", "-m", "tribunal", "ci", str(f), "--format", "sarif", "--project", str(tmp_project)],
+            [
+                sys.executable,
+                "-m",
+                "tribunal",
+                "ci",
+                str(f),
+                "--format",
+                "sarif",
+                "--project",
+                str(tmp_project),
+            ],
             capture_output=True,
             text=True,
             cwd=str(tmp_project),
@@ -560,7 +659,15 @@ class TestCLICommand:
         f = tmp_project / "secrets.py"
         f.write_text('TOKEN = "ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefgh1234"\n')
         result = subprocess.run(
-            ["python", "-m", "tribunal", "ci", str(f), "--project", str(tmp_project)],
+            [
+                sys.executable,
+                "-m",
+                "tribunal",
+                "ci",
+                str(f),
+                "--project",
+                str(tmp_project),
+            ],
             capture_output=True,
             text=True,
             cwd=str(tmp_project),
@@ -571,7 +678,19 @@ class TestCLICommand:
         f = tmp_project / "__init__.py"
         f.write_text('"""Clean."""\n')
         result = subprocess.run(
-            ["python", "-m", "tribunal", "ci", str(f), "--format", "json", "--checkers", "secrets", "--project", str(tmp_project)],
+            [
+                sys.executable,
+                "-m",
+                "tribunal",
+                "ci",
+                str(f),
+                "--format",
+                "json",
+                "--checkers",
+                "secrets",
+                "--project",
+                str(tmp_project),
+            ],
             capture_output=True,
             text=True,
             cwd=str(tmp_project),

@@ -23,7 +23,11 @@ def _is_test_file(path: Path) -> bool:
 @register([".py"])
 def check_python(file_path: Path, project_root: Path) -> CheckResult:
     """Check Python file with ruff and type checker."""
-    rel = str(file_path.relative_to(project_root)) if file_path.is_relative_to(project_root) else str(file_path)
+    rel = (
+        str(file_path.relative_to(project_root))
+        if file_path.is_relative_to(project_root)
+        else str(file_path)
+    )
     result = CheckResult(checker="python", file=rel)
 
     if _is_test_file(file_path):
@@ -80,7 +84,9 @@ def _run_ruff(ruff_bin: str, file_path: Path, rel: str, result: CheckResult) -> 
         pass
 
 
-def _run_pyright(pyright_bin: str, file_path: Path, rel: str, result: CheckResult) -> None:
+def _run_pyright(
+    pyright_bin: str, file_path: Path, rel: str, result: CheckResult
+) -> None:
     """Run basedpyright/pyright and collect findings."""
     try:
         proc = subprocess.run(
