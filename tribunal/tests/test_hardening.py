@@ -1014,7 +1014,7 @@ class TestCostAtomicWrites:
 class TestVersion:
     """Verify version bump."""
 
-    def test_version_is_1_2_0(self):
+    def test_version_is_current(self):
         from tribunal import __version__
 
-        assert __version__ == "2.0.1"
+        assert __version__ == "2.0.2"
