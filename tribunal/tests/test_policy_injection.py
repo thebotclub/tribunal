@@ -1,9 +1,9 @@
 """Tests for tribunal.policy.injection — static prompt-injection detector."""
+
 from __future__ import annotations
 
 from typing import Any
 
-import pytest
 
 from tribunal.policy import injection as inj
 

@@ -1,13 +1,13 @@
 """Tests for tribunal.events.store — local SQLite event store."""
+
 from __future__ import annotations
 
-import json
 import sqlite3
 from pathlib import Path
 
 import pytest
 
-from tribunal.events.schema import SCHEMA_VERSION, new_event, SchemaError
+from tribunal.events.schema import new_event, SchemaError
 from tribunal.events.store import (
     EventStore,
     TimelineStats,

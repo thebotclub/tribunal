@@ -19,7 +19,6 @@ import json
 import os
 import platform
 import shutil
-import sys
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -69,7 +68,9 @@ def _hook_command() -> list[str]:
     return ["tribunal", "adapter", "claude-code"]
 
 
-def install_claude_code(*, dry_run: bool = False, settings_path: Optional[Path] = None) -> InstallReport:
+def install_claude_code(
+    *, dry_run: bool = False, settings_path: Optional[Path] = None
+) -> InstallReport:
     """Add (or refresh) Tribunal hooks in Claude Code's settings.json.
 
     The resulting block looks like::
@@ -82,7 +83,9 @@ def install_claude_code(*, dry_run: bool = False, settings_path: Optional[Path] 
         }
     """
     target = settings_path or _claude_settings_path()
-    report = InstallReport(agent="claude-code", target_path=str(target), dry_run=dry_run)
+    report = InstallReport(
+        agent="claude-code", target_path=str(target), dry_run=dry_run
+    )
 
     settings = _read_json_safe(target)
     changes: list[str] = []
@@ -155,14 +158,23 @@ def _cursor_config_path() -> Path:
     """Return the platform-correct path to Cursor's user config."""
     system = platform.system()
     if system == "Darwin":
-        return Path.home() / "Library" / "Application Support" / "Cursor" / "User" / "settings.json"
+        return (
+            Path.home()
+            / "Library"
+            / "Application Support"
+            / "Cursor"
+            / "User"
+            / "settings.json"
+        )
     if system == "Windows":  # pragma: no cover
         return Path(os.environ.get("APPDATA", "")) / "Cursor" / "User" / "settings.json"
     # Linux
     return Path.home() / ".config" / "Cursor" / "User" / "settings.json"
 
 
-def install_cursor(*, dry_run: bool = False, settings_path: Optional[Path] = None) -> InstallReport:
+def install_cursor(
+    *, dry_run: bool = False, settings_path: Optional[Path] = None
+) -> InstallReport:
     """Wire Tribunal into Cursor via its MCP/extension hooks.
 
     Cursor 0.40+ supports MCP servers and external command hooks. We add a

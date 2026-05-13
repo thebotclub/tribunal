@@ -134,7 +134,9 @@ class EventStore:
 
     # ── Writes ───────────────────────────────────────────────────────────
 
-    def insert(self, event: Mapping[str, Any], *, queue_for_cloud: bool = False) -> None:
+    def insert(
+        self, event: Mapping[str, Any], *, queue_for_cloud: bool = False
+    ) -> None:
         """Insert one validated event. Idempotent on event_id."""
         validate_event(event)
         cost = event.get("cost") or {}
@@ -181,7 +183,9 @@ class EventStore:
                     (event["event_id"], int(time.time() * 1000)),
                 )
 
-    def insert_many(self, events: Iterable[Mapping[str, Any]], *, queue_for_cloud: bool = False) -> int:
+    def insert_many(
+        self, events: Iterable[Mapping[str, Any]], *, queue_for_cloud: bool = False
+    ) -> int:
         """Bulk insert. Returns how many rows were newly written."""
         count = 0
         for ev in events:
@@ -230,7 +234,9 @@ class EventStore:
         with self._lock:
             return [
                 r[0]
-                for r in self._conn.execute("SELECT DISTINCT agent FROM events ORDER BY agent")
+                for r in self._conn.execute(
+                    "SELECT DISTINCT agent FROM events ORDER BY agent"
+                )
             ]
 
     # ── Outbox (for cloud streamer) ──────────────────────────────────────
@@ -252,7 +258,10 @@ class EventStore:
             return
         placeholders = ",".join("?" * len(event_ids))
         with self._tx() as cur:
-            cur.execute(f"DELETE FROM outbox WHERE event_id IN ({placeholders})", tuple(event_ids))
+            cur.execute(
+                f"DELETE FROM outbox WHERE event_id IN ({placeholders})",
+                tuple(event_ids),
+            )
 
     def outbox_fail(self, event_ids: Sequence[str], error: str) -> None:
         if not event_ids:
@@ -318,7 +327,9 @@ class TimelineStats:
     cost_usd: float
 
 
-def timeline_stats(store: EventStore, *, since_epoch_ms: Optional[int] = None) -> TimelineStats:
+def timeline_stats(
+    store: EventStore, *, since_epoch_ms: Optional[int] = None
+) -> TimelineStats:
     """Tally events over an optional time range. Used by the dashboard."""
     sql_where = ""
     args: tuple[Any, ...] = ()
@@ -327,7 +338,9 @@ def timeline_stats(store: EventStore, *, since_epoch_ms: Optional[int] = None) -
         args = (since_epoch_ms,)
     with store._lock:  # noqa: SLF001
         conn = store._conn  # noqa: SLF001
-        total = conn.execute(f"SELECT COUNT(*) FROM events{sql_where}", args).fetchone()[0]
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM events{sql_where}", args
+        ).fetchone()[0]
         by_agent = {
             r[0]: r[1]
             for r in conn.execute(

@@ -47,7 +47,7 @@ import re
 from dataclasses import dataclass, field
 from importlib import resources
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Optional, Sequence
+from typing import Any, Mapping, Optional, Sequence
 
 # We accept either real PyYAML or a tiny built-in fallback when PyYAML is
 # absent (pyyaml IS a runtime dep but the engine should not crash on
@@ -75,7 +75,9 @@ class Rule:
 
     def __post_init__(self) -> None:
         if self.action not in VALID_ACTIONS:
-            raise ValueError(f"unknown action {self.action!r}; valid: {sorted(VALID_ACTIONS)}")
+            raise ValueError(
+                f"unknown action {self.action!r}; valid: {sorted(VALID_ACTIONS)}"
+            )
 
 
 @dataclass
@@ -194,10 +196,18 @@ def _check_predicate(event: Mapping[str, Any], key: str, expected: Any) -> bool:
     if key == "tool_name":
         return _in(_dig(event, "payload.tool_name"), expected)
     if key == "path_match":
-        path = _dig(event, "payload.path") or _dig(event, "payload.tool_input.file_path") or ""
+        path = (
+            _dig(event, "payload.path")
+            or _dig(event, "payload.tool_input.file_path")
+            or ""
+        )
         return _glob_any(path, expected)
     if key == "command_match":
-        cmd = _dig(event, "payload.command") or _dig(event, "payload.tool_input.command") or ""
+        cmd = (
+            _dig(event, "payload.command")
+            or _dig(event, "payload.tool_input.command")
+            or ""
+        )
         return _regex_any(cmd, expected)
     if key == "payload_regex":
         if not isinstance(expected, Mapping):

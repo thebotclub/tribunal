@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import os
 import socket
-from typing import Any, Callable, Mapping, Optional
+from typing import Any, Callable, Mapping
 
 from tribunal.events.schema import new_event
 
@@ -53,7 +53,9 @@ def _machine_id() -> str:
 
 
 def _agent_version(payload: Mapping[str, Any]) -> str:
-    return str(payload.get("claude_code_version") or payload.get("version") or "unknown")
+    return str(
+        payload.get("claude_code_version") or payload.get("version") or "unknown"
+    )
 
 
 def _session_id(payload: Mapping[str, Any]) -> str:

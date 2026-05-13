@@ -14,9 +14,8 @@ confirm/dismiss.
 from __future__ import annotations
 
 import re
-import unicodedata
 from dataclasses import dataclass
-from typing import Iterable, Mapping, Optional
+from typing import Mapping
 
 
 # Public-facing dataclass

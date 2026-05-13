@@ -1,4 +1,5 @@
 """Tests for tribunal.policy.evaluator — YAML rule packs + event eval."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -158,7 +159,9 @@ def test_evaluate_multiple_packs() -> None:
             "name": "a",
             "version": 1,
             "description": "",
-            "rules": [{"id": "a1", "when": {"event_type": "file.write"}, "action": "warn"}],
+            "rules": [
+                {"id": "a1", "when": {"event_type": "file.write"}, "action": "warn"}
+            ],
         }
     )
     pack_b = pol.load_pack(
@@ -166,7 +169,9 @@ def test_evaluate_multiple_packs() -> None:
             "name": "b",
             "version": 1,
             "description": "",
-            "rules": [{"id": "b1", "when": {"event_type": "file.write"}, "action": "deny"}],
+            "rules": [
+                {"id": "b1", "when": {"event_type": "file.write"}, "action": "deny"}
+            ],
         }
     )
     d = pol.evaluate(_event(), [pack_a, pack_b])
@@ -203,16 +208,23 @@ def test_agent_predicate() -> None:
 
 def test_tool_name_predicate() -> None:
     pack = _pack_with(action="ask", event_type="tool.proposed", tool_name="Bash")
-    ev = _event(event_type="tool.proposed", payload={"tool_name": "Bash", "command": "ls"})
+    ev = _event(
+        event_type="tool.proposed", payload={"tool_name": "Bash", "command": "ls"}
+    )
     assert pol.evaluate(ev, [pack]).action == "ask"
     ev2 = _event(event_type="tool.proposed", payload={"tool_name": "Read"})
     assert pol.evaluate(ev2, [pack]).action == "allow"
 
 
 def test_path_match_predicate_glob() -> None:
-    pack = _pack_with(action="deny", event_type="file.write", path_match=["**/.env", "**/.env.*"])
+    pack = _pack_with(
+        action="deny", event_type="file.write", path_match=["**/.env", "**/.env.*"]
+    )
     assert pol.evaluate(_event(payload={"path": "/x/.env"}), [pack]).action == "deny"
-    assert pol.evaluate(_event(payload={"path": "/x/.env.production"}), [pack]).action == "deny"
+    assert (
+        pol.evaluate(_event(payload={"path": "/x/.env.production"}), [pack]).action
+        == "deny"
+    )
     assert pol.evaluate(_event(payload={"path": "/x/foo.py"}), [pack]).action == "allow"
 
 
@@ -220,7 +232,10 @@ def test_path_match_reads_tool_input_file_path() -> None:
     pack = _pack_with(action="deny", path_match="**/secrets/**")
     ev = _event(
         event_type="tool.proposed",
-        payload={"tool_name": "Write", "tool_input": {"file_path": "/repo/secrets/k.txt"}},
+        payload={
+            "tool_name": "Write",
+            "tool_input": {"file_path": "/repo/secrets/k.txt"},
+        },
     )
     assert pol.evaluate(ev, [pack]).action == "deny"
 
@@ -233,7 +248,9 @@ def test_command_match_predicate_regex() -> None:
     )
     ev = _event(event_type="bash.executed", payload={"command": "rm -rf /tmp/foo"})
     assert pol.evaluate(ev, [pack]).action == "deny"
-    ev2 = _event(event_type="bash.executed", payload={"command": "git push --force origin main"})
+    ev2 = _event(
+        event_type="bash.executed", payload={"command": "git push --force origin main"}
+    )
     assert pol.evaluate(ev2, [pack]).action == "deny"
     ev3 = _event(event_type="bash.executed", payload={"command": "ls -la"})
     assert pol.evaluate(ev3, [pack]).action == "allow"
@@ -245,9 +262,15 @@ def test_payload_regex_map_all_must_match() -> None:
         event_type="prompt.submitted",
         payload_regex={"prompt": r"deploy", "target": r"prod"},
     )
-    ev = _event(event_type="prompt.submitted", payload={"prompt": "please deploy", "target": "production"})
+    ev = _event(
+        event_type="prompt.submitted",
+        payload={"prompt": "please deploy", "target": "production"},
+    )
     assert pol.evaluate(ev, [pack]).action == "warn"
-    ev2 = _event(event_type="prompt.submitted", payload={"prompt": "please deploy", "target": "staging"})
+    ev2 = _event(
+        event_type="prompt.submitted",
+        payload={"prompt": "please deploy", "target": "staging"},
+    )
     assert pol.evaluate(ev2, [pack]).action == "allow"
 
 

@@ -27,13 +27,13 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 
 from tribunal import __version__
-from tribunal.events.schema import SchemaError, new_event, validate_event
+from tribunal.events.schema import SchemaError, new_event
 from tribunal.events.store import EventStore, timeline_stats
 from tribunal.events.stream import CloudStreamer
-from tribunal.cost import CostCaps, aggregate, check_caps, load_caps
+from tribunal.cost import aggregate
 from tribunal.policy.evaluator import (
     Decision,
     PolicyPack,
@@ -78,9 +78,13 @@ def create_app(
 
     store = store or EventStore()
     streamer = streamer or CloudStreamer(store)
-    auth_token = auth_token if auth_token is not None else os.environ.get("TRIBUNAL_TOKEN", "")
-    packs: list[PolicyPack] = list(policy_packs) if policy_packs is not None else (
-        load_shipped_packs() if enable_policy else []
+    auth_token = (
+        auth_token if auth_token is not None else os.environ.get("TRIBUNAL_TOKEN", "")
+    )
+    packs: list[PolicyPack] = (
+        list(policy_packs)
+        if policy_packs is not None
+        else (load_shipped_packs() if enable_policy else [])
     )
     slack_notifier = slack if slack is not None else SlackNotifier.from_env()
 
@@ -110,7 +114,7 @@ def create_app(
             return
         if not authorization.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="missing bearer token")
-        if authorization[len("Bearer "):] != auth_token:
+        if authorization[len("Bearer ") :] != auth_token:
             raise HTTPException(status_code=403, detail="invalid token")
 
     # ── Health ───────────────────────────────────────────────────────────

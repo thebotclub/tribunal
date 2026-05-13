@@ -1,10 +1,10 @@
 """Tests for tribunal.events.stream — batched cloud uploader."""
+
 from __future__ import annotations
 
 import json
 import urllib.error
 from pathlib import Path
-from typing import Any, Callable
 from unittest.mock import MagicMock, patch
 
 import pytest

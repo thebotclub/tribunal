@@ -62,7 +62,9 @@ def _common_fields(payload: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "agent": AGENT_ID,
         "agent_version": str(payload.get("cursor_version") or "unknown"),
-        "session_id": str(payload.get("session_id") or payload.get("chat_id") or "unknown"),
+        "session_id": str(
+            payload.get("session_id") or payload.get("chat_id") or "unknown"
+        ),
         "user_id": _user_id(payload),
         "machine_id": _machine_id(),
         "repo_path": payload.get("workspace_root") or payload.get("cwd") or os.getcwd(),
@@ -149,7 +151,10 @@ def on_tool_result(payload: Mapping[str, Any], emit: Emit) -> None:
         emit(
             new_event(
                 event_type="file.write",
-                payload={"path": args.get("path", ""), "bytes": len(str(args.get("content", "")))},
+                payload={
+                    "path": args.get("path", ""),
+                    "bytes": len(str(args.get("content", ""))),
+                },
                 **_common_fields(payload),
             )
         )
@@ -168,7 +173,9 @@ def on_tool_result(payload: Mapping[str, Any], emit: Emit) -> None:
                 payload={
                     "command": args.get("command", ""),
                     "exit_code": (payload.get("result") or {}).get("exit_code"),
-                    "stdout_truncated": str((payload.get("result") or {}).get("stdout", ""))[:500],
+                    "stdout_truncated": str(
+                        (payload.get("result") or {}).get("stdout", "")
+                    )[:500],
                 },
                 **_common_fields(payload),
             )

@@ -1,13 +1,12 @@
 """Tests for tribunal.cost (v3 — cross-agent, event-store driven)."""
+
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
 from tribunal.cost import (
-    CapDecision,
     CostCaps,
     CostWindow,
     aggregate,
@@ -62,13 +61,20 @@ def test_aggregate_sums_across_agents(store: EventStore) -> None:
     assert isinstance(win, CostWindow)
     assert win.total_usd == pytest.approx(1.75)
     assert win.event_count == 3
-    assert win.by_agent == {"claude-code": pytest.approx(0.50), "cursor": pytest.approx(1.25)}
+    assert win.by_agent == {
+        "claude-code": pytest.approx(0.50),
+        "cursor": pytest.approx(1.25),
+    }
 
 
 def test_aggregate_filters_by_user_and_repo(store: EventStore) -> None:
     store.insert(_cost_event(usd=1.0, user_id="u-1", repo_path="acme/a"))
-    store.insert(_cost_event(usd=2.0, user_id="u-2", repo_path="acme/a", session_id="s-2"))
-    store.insert(_cost_event(usd=3.0, user_id="u-1", repo_path="acme/b", session_id="s-3"))
+    store.insert(
+        _cost_event(usd=2.0, user_id="u-2", repo_path="acme/a", session_id="s-2")
+    )
+    store.insert(
+        _cost_event(usd=3.0, user_id="u-1", repo_path="acme/b", session_id="s-3")
+    )
     win = aggregate(store, since_epoch_ms=0, user_id="u-1")
     assert win.total_usd == pytest.approx(4.0)
     win2 = aggregate(store, since_epoch_ms=0, user_id="u-1", repo_path="acme/a")
@@ -163,8 +169,10 @@ def test_check_caps_daily_window(store: EventStore) -> None:
     one_hour_ago_ms = now_ms - 3600 * 1000
     from datetime import datetime, timezone
 
-    ts = datetime.fromtimestamp(one_hour_ago_ms / 1000, tz=timezone.utc).isoformat().replace(
-        "+00:00", "Z"
+    ts = (
+        datetime.fromtimestamp(one_hour_ago_ms / 1000, tz=timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z")
     )
     store.insert(_cost_event(usd=50.0, session_id="s-1", ts=ts))
     caps = CostCaps(daily_usd=40.0)

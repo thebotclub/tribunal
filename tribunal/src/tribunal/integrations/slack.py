@@ -19,7 +19,6 @@ import json
 import logging
 import os
 import threading
-import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -59,7 +58,9 @@ class SlackNotifier:
 
     # ── Public entry points ─────────────────────────────────────────────
 
-    def notify_policy_decision(self, event: Mapping[str, Any], decision: Mapping[str, Any]) -> None:
+    def notify_policy_decision(
+        self, event: Mapping[str, Any], decision: Mapping[str, Any]
+    ) -> None:
         action = decision.get("action") or ""
         if action not in ("deny", "ask"):
             return
@@ -75,7 +76,9 @@ class SlackNotifier:
             )
         )
 
-    def notify_injection(self, event: Mapping[str, Any], finding: Mapping[str, Any]) -> None:
+    def notify_injection(
+        self, event: Mapping[str, Any], finding: Mapping[str, Any]
+    ) -> None:
         severity = str(finding.get("severity") or "low")
         if severity == "low":
             return  # don't page on low-confidence injection
@@ -169,13 +172,15 @@ class SlackNotifier:
             f":shield: Tribunal — {block_count} block(s), {ask_count} ask(s), "
             f"{inj_count} injection alert(s), {cost_count} cost breach(es)."
         )
-        blocks.append(
-            {"type": "section", "text": {"type": "mrkdwn", "text": headline}}
-        )
+        blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": headline}})
         # First N alerts as detail blocks
         for alert in batch[:10]:
-            icon = {"block": ":no_entry:", "ask": ":question:",
-                    "injection": ":warning:", "cost": ":moneybag:"}.get(alert.severity, ":bell:")
+            icon = {
+                "block": ":no_entry:",
+                "ask": ":question:",
+                "injection": ":warning:",
+                "cost": ":moneybag:",
+            }.get(alert.severity, ":bell:")
             lines = [f"{icon} *{alert.title}*"]
             if alert.detail:
                 lines.append(alert.detail.strip())
@@ -191,14 +196,20 @@ class SlackNotifier:
             if meta_parts:
                 lines.append("· ".join(meta_parts))
             blocks.append(
-                {"type": "section", "text": {"type": "mrkdwn", "text": "\n".join(lines)}}
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": "\n".join(lines)},
+                }
             )
         if len(batch) > 10:
             blocks.append(
                 {
                     "type": "context",
                     "elements": [
-                        {"type": "mrkdwn", "text": f"_+{len(batch) - 10} more alert(s)…_"}
+                        {
+                            "type": "mrkdwn",
+                            "text": f"_+{len(batch) - 10} more alert(s)…_",
+                        }
                     ],
                 }
             )

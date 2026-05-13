@@ -103,7 +103,9 @@ def on_tool_call(payload: Mapping[str, Any], emit: Emit) -> None:
     # Map codex tool names to schema-friendly fields
     if name in ("shell", "bash"):
         if isinstance(tool_input, Mapping):
-            extra["command"] = str(tool_input.get("command") or tool_input.get("cmd") or "")
+            extra["command"] = str(
+                tool_input.get("command") or tool_input.get("cmd") or ""
+            )
     elif name == "python":
         if isinstance(tool_input, Mapping):
             extra["command"] = str(tool_input.get("code") or "")

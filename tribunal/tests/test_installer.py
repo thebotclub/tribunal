@@ -1,4 +1,5 @@
 """Tests for tribunal.installer — Claude Code / Cursor settings injection."""
+
 from __future__ import annotations
 
 import json
@@ -7,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from tribunal.installer import (
-    InstallReport,
     install_claude_code,
     install_cursor,
     uninstall_claude_code,
@@ -48,7 +48,10 @@ def test_install_preserves_user_hooks(tmp_path: Path) -> None:
             {
                 "hooks": {
                     "PreToolUse": [
-                        {"matcher": "*", "hooks": [{"type": "command", "command": "my-own-hook"}]}
+                        {
+                            "matcher": "*",
+                            "hooks": [{"type": "command", "command": "my-own-hook"}],
+                        }
                     ]
                 },
                 "model": "claude-3.5-sonnet",
@@ -59,9 +62,7 @@ def test_install_preserves_user_hooks(tmp_path: Path) -> None:
     data = json.loads(target.read_text())
     # User's hook is still there
     cmds = [
-        h["command"]
-        for entry in data["hooks"]["PreToolUse"]
-        for h in entry["hooks"]
+        h["command"] for entry in data["hooks"]["PreToolUse"] for h in entry["hooks"]
     ]
     assert "my-own-hook" in cmds
     assert any("tribunal" in c for c in cmds)

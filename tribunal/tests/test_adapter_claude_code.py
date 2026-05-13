@@ -1,12 +1,12 @@
 """Tests for tribunal.adapters.claude_code — Claude Code hook translator."""
+
 from __future__ import annotations
 
 from typing import Any
 
-import pytest
 
 from tribunal.adapters import claude_code as cc
-from tribunal.events.schema import validate_event, SchemaError
+from tribunal.events.schema import validate_event
 
 
 def _emit_list() -> tuple[list[dict], Any]:
@@ -43,7 +43,9 @@ def test_session_start_produces_one_validated_event() -> None:
 
 def test_session_stop_includes_reason() -> None:
     events, emit = _emit_list()
-    cc.on_session_stop(_base_payload(hook_event_name="Stop", stop_reason="user", turn_count=4), emit)
+    cc.on_session_stop(
+        _base_payload(hook_event_name="Stop", stop_reason="user", turn_count=4), emit
+    )
     assert events[0]["event_type"] == "session.end"
     assert events[0]["payload"]["reason"] == "user"
     assert events[0]["payload"]["turns"] == 4
@@ -161,7 +163,12 @@ def test_cost_recorded_populates_cost_object() -> None:
     events, emit = _emit_list()
     cc.on_cost_recorded(
         _base_payload(
-            cost={"usd": 0.21, "model": "claude-3.5-sonnet", "input_tokens": 100, "output_tokens": 50},
+            cost={
+                "usd": 0.21,
+                "model": "claude-3.5-sonnet",
+                "input_tokens": 100,
+                "output_tokens": 50,
+            },
         ),
         emit,
     )
@@ -174,7 +181,9 @@ def test_cost_recorded_populates_cost_object() -> None:
 def test_mcp_call_emits_before() -> None:
     events, emit = _emit_list()
     cc.on_mcp_call(
-        _base_payload(mcp_server="filesystem", mcp_method="read", mcp_args={"path": "/x"}),
+        _base_payload(
+            mcp_server="filesystem", mcp_method="read", mcp_args={"path": "/x"}
+        ),
         emit,
     )
     assert events[0]["event_type"] == "mcp.call.before"
@@ -186,7 +195,9 @@ def test_mcp_call_emits_before() -> None:
 
 def test_translate_known_hook_returns_count() -> None:
     events, emit = _emit_list()
-    n = cc.translate(_base_payload(hook_event_name="UserPromptSubmit", prompt="hi"), emit)
+    n = cc.translate(
+        _base_payload(hook_event_name="UserPromptSubmit", prompt="hi"), emit
+    )
     assert n == 1
     assert events[0]["event_type"] == "prompt.submitted"
 
@@ -207,7 +218,12 @@ def test_translate_all_known_hooks_produce_valid_events() -> None:
         if hook_name in ("PreToolUse", "PostToolUse"):
             payload.update(tool_name="Bash", tool_input={"command": "ls"})
         if hook_name == "CostRecorded":
-            payload["cost"] = {"usd": 0.1, "model": "x", "input_tokens": 1, "output_tokens": 1}
+            payload["cost"] = {
+                "usd": 0.1,
+                "model": "x",
+                "input_tokens": 1,
+                "output_tokens": 1,
+            }
         n = cc.translate(payload, emit)
         assert n >= 1
         for ev in events:

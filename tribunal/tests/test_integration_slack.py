@@ -1,4 +1,5 @@
 """Tests for tribunal.integrations.slack — webhook notifier."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -37,9 +38,13 @@ def test_from_env_reads_webhook(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_policy_decision_enqueued_only_for_deny_or_ask() -> None:
     n = SlackNotifier(webhook_url="https://hooks.test/x")
-    n.notify_policy_decision({"agent": "claude-code", "session_id": "s"}, {"action": "allow"})
+    n.notify_policy_decision(
+        {"agent": "claude-code", "session_id": "s"}, {"action": "allow"}
+    )
     assert len(n._queue) == 0  # type: ignore[attr-defined]
-    n.notify_policy_decision({"agent": "claude-code", "session_id": "s"}, {"action": "warn"})
+    n.notify_policy_decision(
+        {"agent": "claude-code", "session_id": "s"}, {"action": "warn"}
+    )
     assert len(n._queue) == 0  # type: ignore[attr-defined]
     n.notify_policy_decision(
         {"agent": "claude-code", "session_id": "s"},
@@ -60,7 +65,9 @@ def test_injection_low_severity_dropped() -> None:
 
 def test_cost_breach_enqueues_alert() -> None:
     n = SlackNotifier(webhook_url="https://hooks.test/x")
-    n.notify_cost_breach(window="day", spent_usd=120.0, cap_usd=100.0, agent="claude-code")
+    n.notify_cost_breach(
+        window="day", spent_usd=120.0, cap_usd=100.0, agent="claude-code"
+    )
     assert len(n._queue) == 1  # type: ignore[attr-defined]
 
 
@@ -78,22 +85,33 @@ def test_render_produces_block_kit_structure() -> None:
     n = SlackNotifier(webhook_url="https://hooks.test/x")
     n.notify_policy_decision(
         {"agent": "claude-code", "session_id": "abcdef1234"},
-        {"action": "deny", "rule_id": "secrets/no-env-write", "pack": "secrets-readonly",
-         "message": "Writing secrets blocked."},
+        {
+            "action": "deny",
+            "rule_id": "secrets/no-env-write",
+            "pack": "secrets-readonly",
+            "message": "Writing secrets blocked.",
+        },
     )
     n.notify_injection(
         {"agent": "cursor", "session_id": "x"},
-        {"severity": "high", "rule_id": "injection/ignore-previous",
-         "message": "ignore-prev detected"},
+        {
+            "severity": "high",
+            "rule_id": "injection/ignore-previous",
+            "message": "ignore-prev detected",
+        },
     )
     with n._lock:  # type: ignore[attr-defined]
         batch = list(n._queue)  # type: ignore[attr-defined]
     body = n._render(batch)  # type: ignore[attr-defined]
     assert "blocks" in body
     assert "text" in body
-    assert any("block(s)" in (b.get("text", {}).get("text", "") or "") for b in body["blocks"])
-    assert any("Writing secrets blocked." in (b.get("text", {}).get("text", "") or "")
-               for b in body["blocks"])
+    assert any(
+        "block(s)" in (b.get("text", {}).get("text", "") or "") for b in body["blocks"]
+    )
+    assert any(
+        "Writing secrets blocked." in (b.get("text", {}).get("text", "") or "")
+        for b in body["blocks"]
+    )
 
 
 def test_render_truncates_long_batches() -> None:
@@ -105,8 +123,15 @@ def test_render_truncates_long_batches() -> None:
     body = n._render(batch)  # type: ignore[attr-defined]
     # Should be 1 header + 10 alert sections + 1 "more" context block = 12
     assert len(body["blocks"]) == 12
-    assert any("more alert" in (b.get("elements", [{}])[0].get("text", "") if b.get("type") == "context" else "")
-               for b in body["blocks"])
+    assert any(
+        "more alert"
+        in (
+            b.get("elements", [{}])[0].get("text", "")
+            if b.get("type") == "context"
+            else ""
+        )
+        for b in body["blocks"]
+    )
 
 
 # ── Flush is safe even on webhook failure ───────────────────────────────────

@@ -30,7 +30,6 @@ optional ``tool.executed`` + ``cost.recorded`` + ``session.end``.
 
 import os
 import socket
-import time
 import uuid
 from typing import Any, Callable, Mapping
 

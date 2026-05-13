@@ -77,11 +77,14 @@ class CloudStreamer:
         if not self.enabled:
             log.info(
                 "CloudStreamer disabled (set %s and %s to enable)",
-                _ENV_URL, _ENV_TOKEN,
+                _ENV_URL,
+                _ENV_TOKEN,
             )
             return
         self._stop.clear()
-        self._thread = threading.Thread(target=self._run, name="tribunal-streamer", daemon=True)
+        self._thread = threading.Thread(
+            target=self._run, name="tribunal-streamer", daemon=True
+        )
         self._thread.start()
 
     def stop(self, timeout: float = 5.0) -> None:

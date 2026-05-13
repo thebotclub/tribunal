@@ -1,9 +1,9 @@
 """Tests for tribunal.adapters.cursor — Cursor IDE event translator."""
+
 from __future__ import annotations
 
 from typing import Any
 
-import pytest
 
 from tribunal.adapters import cursor
 from tribunal.events.schema import validate_event
@@ -61,7 +61,9 @@ def test_user_message_emits_prompt_submitted() -> None:
 
 def test_tool_call_shell_extracts_command() -> None:
     events, emit = _emit_list()
-    cursor.on_tool_call(_base(type="tool.call", tool="shell", args={"command": "ls"}), emit)
+    cursor.on_tool_call(
+        _base(type="tool.call", tool="shell", args={"command": "ls"}), emit
+    )
     ev = events[0]
     assert ev["event_type"] == "tool.proposed"
     assert ev["payload"]["tool_name"] == "shell"
@@ -70,7 +72,9 @@ def test_tool_call_shell_extracts_command() -> None:
 
 def test_tool_call_mcp_extracts_server() -> None:
     events, emit = _emit_list()
-    cursor.on_tool_call(_base(type="tool.call", tool="mcp.github.create_pr", args={}), emit)
+    cursor.on_tool_call(
+        _base(type="tool.call", tool="mcp.github.create_pr", args={}), emit
+    )
     assert events[0]["payload"]["mcp_server"] == "github"
 
 
@@ -94,8 +98,13 @@ def test_tool_result_success_writes_file_event() -> None:
 def test_tool_result_failure_only_emits_failed() -> None:
     events, emit = _emit_list()
     cursor.on_tool_result(
-        _base(type="tool.result", tool="write_file", ok=False, error="EACCES",
-              args={"path": "/x"}),
+        _base(
+            type="tool.result",
+            tool="write_file",
+            ok=False,
+            error="EACCES",
+            args={"path": "/x"},
+        ),
         emit,
     )
     assert len(events) == 1
@@ -141,7 +150,12 @@ def test_cost_event() -> None:
     cursor.on_cost(
         _base(
             type="cost.recorded",
-            cost={"usd": 0.05, "model": "gpt-4o", "input_tokens": 100, "output_tokens": 30},
+            cost={
+                "usd": 0.05,
+                "model": "gpt-4o",
+                "input_tokens": 100,
+                "output_tokens": 30,
+            },
         ),
         emit,
     )
@@ -175,7 +189,9 @@ def test_all_known_types_produce_valid_events() -> None:
         if type_ == "tool.call":
             payload.update(tool="shell", args={"command": "ls"})
         if type_ == "tool.result":
-            payload.update(tool="shell", ok=True, args={"command": "ls"}, result={"exit_code": 0})
+            payload.update(
+                tool="shell", ok=True, args={"command": "ls"}, result={"exit_code": 0}
+            )
         if type_ == "file.save":
             payload["path"] = "/repo/x.py"
         if type_ == "cost.recorded":

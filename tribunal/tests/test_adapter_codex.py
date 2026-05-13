@@ -1,4 +1,5 @@
 """Tests for tribunal.adapters.codex — OpenAI Codex CLI translator."""
+
 from __future__ import annotations
 
 from typing import Any

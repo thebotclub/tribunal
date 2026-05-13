@@ -21,8 +21,6 @@ from __future__ import annotations
 
 import json
 import os
-import tempfile
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -168,7 +166,9 @@ class TestGateMainFailsClosed:
 
         audit_path = tmp_path / ".tribunal" / "audit.jsonl"
         assert audit_path.exists(), "an audit entry must be written on error"
-        lines = [json.loads(line) for line in audit_path.read_text().splitlines() if line]
+        lines = [
+            json.loads(line) for line in audit_path.read_text().splitlines() if line
+        ]
         # The last entry should describe the tribunal-error
         assert any(
             "tribunal-error" in (entry.get("rule") or "")

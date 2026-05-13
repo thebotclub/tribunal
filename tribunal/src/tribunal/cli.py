@@ -618,6 +618,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 
 # ── v3 command handlers ─────────────────────────────────────────────────────────────
 
+
 def _parse_window(spec: str) -> int:
     """Convert '24h' / '7d' / '30d' into milliseconds."""
     spec = spec.strip().lower()
@@ -655,7 +656,9 @@ def cmd_cost(args: argparse.Namespace) -> int:
     try:
         from .events.store import EventStore
     except ImportError:
-        print("⚠  event store not available — run 'tribunal init' first", file=sys.stderr)
+        print(
+            "⚠  event store not available — run 'tribunal init' first", file=sys.stderr
+        )
         return 2
     window_ms = _parse_window(args.last)
     import time as _time
@@ -760,7 +763,9 @@ def cmd_scan(args: argparse.Namespace) -> int:
 def cmd_adapter(args: argparse.Namespace) -> int:
     agent = args.agent
     home = Path.home()
-    print(f"{'Uninstalling' if args.uninstall else 'Installing'} adapter for {agent}...")
+    print(
+        f"{'Uninstalling' if args.uninstall else 'Installing'} adapter for {agent}..."
+    )
 
     if agent == "claude-code":
         target = home / ".claude" / "settings.json"
@@ -771,10 +776,16 @@ def cmd_adapter(args: argparse.Namespace) -> int:
         cfg = json.loads(target.read_text()) if target.exists() else {}
         cfg.setdefault("hooks", {})
         cfg["hooks"]["PreToolUse"] = [
-            {"if": {"matcher": ".*"}, "run": [{"command": "tribunal-adapter claude-code pre"}]}
+            {
+                "if": {"matcher": ".*"},
+                "run": [{"command": "tribunal-adapter claude-code pre"}],
+            }
         ]
         cfg["hooks"]["PostToolUse"] = [
-            {"if": {"matcher": ".*"}, "run": [{"command": "tribunal-adapter claude-code post"}]}
+            {
+                "if": {"matcher": ".*"},
+                "run": [{"command": "tribunal-adapter claude-code post"}],
+            }
         ]
         target.write_text(json.dumps(cfg, indent=2))
         print(f"  wrote {target}")
@@ -790,7 +801,9 @@ def cmd_adapter(args: argparse.Namespace) -> int:
     if agent == "copilot-cli":
         target = home / ".copilot" / "hooks" / "tribunal.sh"
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text('#!/usr/bin/env bash\nexec tribunal-adapter copilot-cli "$@"\n')
+        target.write_text(
+            '#!/usr/bin/env bash\nexec tribunal-adapter copilot-cli "$@"\n'
+        )
         target.chmod(0o755)
         print(f"  wrote {target}")
         return 0
@@ -883,17 +896,22 @@ def main() -> None:
     serve_p = sub.add_parser("serve", help="Run the Tribunal daemon (localhost:8088)")
     serve_p.add_argument("--host", default="127.0.0.1")
     serve_p.add_argument("--port", type=int, default=8088)
-    serve_p.add_argument("--cloud", action="store_true",
-                         help="Ship events to TRIBUNAL_INGEST_URL using TRIBUNAL_INGEST_TOKEN")
+    serve_p.add_argument(
+        "--cloud",
+        action="store_true",
+        help="Ship events to TRIBUNAL_INGEST_URL using TRIBUNAL_INGEST_TOKEN",
+    )
     serve_p.add_argument("--no-policy", action="store_true")
     serve_p.add_argument("--no-injection-scan", action="store_true")
 
     # cost — show spend breakdown from the local event store
     cost_p = sub.add_parser("cost", help="Show cost breakdown from the local event log")
-    cost_p.add_argument("--last", default="7d",
-                        help="Time window, e.g. 24h, 7d, 30d (default: 7d)")
-    cost_p.add_argument("--by", choices=["agent", "user", "model", "session"],
-                        default="agent")
+    cost_p.add_argument(
+        "--last", default="7d", help="Time window, e.g. 24h, 7d, 30d (default: 7d)"
+    )
+    cost_p.add_argument(
+        "--by", choices=["agent", "user", "model", "session"], default="agent"
+    )
 
     # policy — pack management (separate from the v1 'pack' command)
     policy_p = sub.add_parser("policy", help="Manage policy packs (v3)")
@@ -908,7 +926,9 @@ def main() -> None:
     policy_sub.add_parser("reload", help="Tell the running daemon to reload packs")
 
     # scan — ad hoc prompt-injection scan on a file or stdin
-    scan_p = sub.add_parser("scan", help="Run the prompt-injection scanner on a file or stdin")
+    scan_p = sub.add_parser(
+        "scan", help="Run the prompt-injection scanner on a file or stdin"
+    )
     scan_p.add_argument("path", nargs="?", help="File to scan (default: stdin)")
     scan_p.add_argument("--json", action="store_true")
 
