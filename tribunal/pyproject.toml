@@ -23,21 +23,21 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
 ]
 dependencies = [
-    "pyyaml>=6.0.2",
-    "jsonschema>=4.23",
+    "pyyaml>=6.0.3",
+    "jsonschema>=4.26.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.3",
-    "ruff>=0.8",
-    "fastapi>=0.115",
-    "httpx>=0.28",
-    "uvicorn>=0.32",
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
+    "fastapi>=0.136.1",
+    "httpx>=0.28.1",
+    "uvicorn>=0.46.0",
 ]
 serve = [
-    "fastapi>=0.115",
-    "uvicorn>=0.32",
+    "fastapi>=0.136.1",
+    "uvicorn>=0.46.0",
 ]
 
 [project.urls]
