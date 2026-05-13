@@ -1,0 +1,55 @@
+{
+  "name": "tribunal-cursor",
+  "displayName": "Tribunal for Cursor",
+  "description": "Stream every Cursor chat turn, tool call, and file save to the Tribunal audit log.",
+  "version": "3.0.0",
+  "publisher": "thebotclub",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thebotclub/tribunal.dev"
+  },
+  "categories": ["Other"],
+  "keywords": ["tribunal", "audit", "governance", "cursor", "claude", "ai"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Tribunal",
+      "properties": {
+        "tribunal.daemonUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:8088",
+          "description": "URL of the local Tribunal daemon."
+        },
+        "tribunal.token": {
+          "type": "string",
+          "default": "",
+          "description": "Bearer token for the daemon (matches TRIBUNAL_TOKEN env)."
+        },
+        "tribunal.captureFileSaves": {
+          "type": "boolean",
+          "default": true,
+          "description": "Emit a file.write event for every save."
+        }
+      }
+    },
+    "commands": [
+      { "command": "tribunal.openDashboard", "title": "Tribunal: Open Audit Dashboard" },
+      { "command": "tribunal.ping",          "title": "Tribunal: Ping Daemon" }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch":   "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node":   "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript":    "^5.4.0"
+  }
+}

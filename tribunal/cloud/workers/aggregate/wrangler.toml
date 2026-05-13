@@ -1,0 +1,20 @@
+name = "tribunal-aggregate"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tribunal-prod"
+database_id = "REPLACE_WITH_D1_ID"
+
+# This worker is a queue consumer, not HTTP-fronted.
+[[queues.consumers]]
+queue = "tribunal-events"
+max_batch_size = 100
+max_batch_timeout = 5
+max_retries = 3
+dead_letter_queue = "tribunal-events-dlq"
+
+[vars]
+ENV = "production"

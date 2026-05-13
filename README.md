@@ -1,51 +1,85 @@
 # tribunal.dev
 
-The website and Python CLI for [Tribunal](https://tribunal.dev) — local quality gates for AI-generated code.
+> **Heads-up:** Tribunal is mid-pivot to **v3 — the open audit and policy
+> layer for coding agents** (Claude Code, Cursor, Copilot CLI, Codex CLI).
+> The v2 quality-gates CLI still works and stays supported as a `tribunal scan`
+> subcommand. Public 3.0 GA targeted for Q3 2026. See
+> [`ROADMAP-V2.md`](ROADMAP-V2.md) and the v3 execution plan attached to the
+> first v3 PR for details.
 
-## Repository Structure
+This monorepo hosts the marketing site, the Python package, and the
+docs/build infrastructure for [Tribunal](https://tribunal.dev).
+
+## Repository structure
 
 ```
 tribunal.dev/
-├── src/              # Next.js website (tribunal.dev)
-├── tribunal/         # Python CLI package
-│   ├── src/tribunal/ # Core modules (26 modules)
-│   └── tests/        # Test suite (432 tests)
-├── vscode-tribunal/  # VS Code extension scaffold
+├── src/              # Next.js marketing site (tribunal.dev)
+├── tribunal/         # Python package
+│   ├── src/tribunal/ # Core modules
+│   └── tests/        # Test suite
 ├── docs/             # MkDocs documentation site
-├── .github/          # CI/CD workflows (test matrix, PyPI publish, website)
-├── ROADMAP-V2.md     # V2 roadmap (Phases 5-10)
+├── .github/          # CI/CD workflows
 └── package.json      # Website dependencies
 ```
 
-## Tribunal CLI
+`vscode-tribunal/` is paused and excluded from the v3 launch surface.
 
-Tribunal enforces TDD, secret scanning, linting, and team standards across CI, pre-commit, and AI coding agent workflows.
+## What Tribunal is (v3, in one line)
+
+**One audit log, one policy engine, one spend ledger — for every coding agent
+on your team.**
+
+Today's coding agents (Claude Code, Cursor, Copilot CLI, Codex CLI) each have
+their own logs, their own caps, and their own admin surfaces. Tribunal sits
+underneath all of them, normalises every tool call into a unified event
+schema, enforces cross-agent policy, tracks cost, and produces an audit trail
+your security and compliance team can actually use.
+
+The CLI, daemon, adapters, policy engine, and event schema are **open
+source (MIT)**. The hosted dashboard, SSO, and SOC 2 evidence pack are the
+paid tier.
+
+## Quickstart
 
 ```bash
 pip install tribunal
-tribunal init
+tribunal init        # detects installed agents, wires hooks, starts the local daemon
+tribunal status      # show what's connected
 ```
 
-**Core CLI commands** cover quality checks, project initialization, rule packs, audit logs, configuration inspection, and installation health checks.
+Power-user subcommands:
 
-See [tribunal/README.md](tribunal/README.md) for full documentation.
+```bash
+tribunal scan .      # the legacy v2 quality-gate scanner (still supported)
+tribunal audit tail  # live tail of the unified event stream
+tribunal policy test # dry-run a policy YAML against recent events
+tribunal cost report # cross-agent spend over the last 7 days
+```
 
-## Website
+See [`tribunal/README.md`](tribunal/README.md) for full CLI docs.
 
-The marketing site at [tribunal.dev](https://tribunal.dev) is built with Next.js and deployed on Cloudflare Pages.
+## Marketing site
+
+The site at [tribunal.dev](https://tribunal.dev) is Next.js, deployed on
+Cloudflare Pages.
 
 ```bash
 npm install
 npm run dev     # http://localhost:3000
-npm run build   # Production build
+npm run build   # production build
 ```
 
 ## Links
 
 - **Website:** [tribunal.dev](https://tribunal.dev)
 - **PyPI:** [pypi.org/project/tribunal](https://pypi.org/project/tribunal/)
-- **GitHub:** [github.com/thebotclub/tribunal.dev](https://github.com/thebotclub/tribunal.dev)
+- **Event schema:** `spec/event-schema-v1.json` (published at
+  [tribunal.dev/spec](https://tribunal.dev/spec) once v3 ships)
+- **Roadmap:** [`ROADMAP-V2.md`](ROADMAP-V2.md)
 
 ## License
 
-MIT
+MIT for the CLI, daemon, adapters, policy engine, and event schema. The
+hosted dashboard and the compliance-tier extras are source-available under a
+commercial license (full text shipped alongside v3 GA).

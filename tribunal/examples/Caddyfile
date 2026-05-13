@@ -1,0 +1,5 @@
+# Replace tribunal.internal with your real hostname. Caddy will fetch
+# an ACME cert automatically if the host is publicly resolvable.
+tribunal.internal {
+    reverse_proxy tribunal:8088
+}

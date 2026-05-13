@@ -393,7 +393,7 @@ def cmd_ci(args: argparse.Namespace) -> int:
     This is the main CI/CD entrypoint. Runs all checkers (secrets, TDD,
     linting) and outputs results in SARIF, JSON, or text format.
     """
-    from .checkers import collect_files, run_checkers
+    from .scan import collect_files, run_checkers
     from .sarif import findings_to_sarif, sarif_to_json
 
     project_root = (
@@ -616,6 +616,196 @@ def cmd_doctor(args: argparse.Namespace) -> int:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 
+# ── v3 command handlers ─────────────────────────────────────────────────────────────
+
+def _parse_window(spec: str) -> int:
+    """Convert '24h' / '7d' / '30d' into milliseconds."""
+    spec = spec.strip().lower()
+    if spec.endswith("h"):
+        return int(spec[:-1]) * 3600 * 1000
+    if spec.endswith("d"):
+        return int(spec[:-1]) * 86400 * 1000
+    if spec.endswith("m"):
+        return int(spec[:-1]) * 60 * 1000
+    return int(spec) * 1000
+
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    try:
+        import uvicorn
+
+        from .daemon import create_app
+    except ImportError as e:
+        print(f"⚠  daemon dependencies missing: {e}", file=sys.stderr)
+        print("   Install with: pipx install 'tribunal[daemon]'", file=sys.stderr)
+        return 2
+
+    app = create_app(
+        enable_policy=not args.no_policy,
+        enable_injection_scan=not args.no_injection_scan,
+    )
+    print(f"△ Tribunal daemon · http://{args.host}:{args.port}")
+    if args.cloud:
+        print("  Cloud mode: events will be batched to TRIBUNAL_INGEST_URL")
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info")
+    return 0
+
+
+def cmd_cost(args: argparse.Namespace) -> int:
+    try:
+        from .events.store import EventStore
+    except ImportError:
+        print("⚠  event store not available — run 'tribunal init' first", file=sys.stderr)
+        return 2
+    window_ms = _parse_window(args.last)
+    import time as _time
+
+    since = int(_time.time() * 1000) - window_ms
+    store = EventStore()
+    rows = store.cost_breakdown(since_ms=since, group_by=args.by)
+    if not rows:
+        print(f"No events with cost data in the last {args.last}.")
+        return 0
+    print(f"Cost breakdown by {args.by} · last {args.last}")
+    print("─" * 60)
+    total = 0.0
+    for key, usd, events in rows:
+        print(f"  {key:<32}  ${usd:>8.4f}   ({events} events)")
+        total += usd
+    print("─" * 60)
+    print(f"  {'TOTAL':<32}  ${total:>8.4f}")
+    return 0
+
+
+def cmd_policy(args: argparse.Namespace) -> int:
+    from .policy.evaluator import load_shipped_packs, load_pack
+
+    sub = getattr(args, "policy_command", None) or "list"
+
+    if sub == "list":
+        packs = load_shipped_packs()
+        if not packs:
+            print("No shipped packs found.")
+            return 0
+        state_dir = Path.home() / ".tribunal"
+        ef = state_dir / "enabled-packs.txt"
+        enabled = set(ef.read_text().splitlines()) if ef.exists() else set()
+        for p in packs:
+            mark = "✓" if p.name in enabled else " "
+            print(f"  [{mark}] {p.name:<24}  v{p.version}  ({len(p.rules)} rules)")
+        return 0
+
+    if sub == "enable" or sub == "disable":
+        state_dir = Path.home() / ".tribunal"
+        state_dir.mkdir(parents=True, exist_ok=True)
+        f = state_dir / "enabled-packs.txt"
+        enabled = set(f.read_text().splitlines()) if f.exists() else set()
+        if sub == "enable":
+            enabled.add(args.name)
+            print(f"✓ enabled pack: {args.name}")
+        else:
+            enabled.discard(args.name)
+            print(f"✓ disabled pack: {args.name}")
+        f.write_text("\n".join(sorted(enabled)) + "\n")
+        return 0
+
+    if sub == "lint":
+        try:
+            pack = load_pack(Path(args.path))
+        except Exception as e:
+            print(f"✗ invalid: {e}", file=sys.stderr)
+            return 1
+        print(f"✓ valid pack: {pack.name} v{pack.version} ({len(pack.rules)} rules)")
+        return 0
+
+    if sub == "reload":
+        # Best-effort: post to running daemon.
+        try:
+            import urllib.request
+
+            req = urllib.request.Request(
+                "http://127.0.0.1:8088/v1/policy/reload", method="POST"
+            )
+            urllib.request.urlopen(req, timeout=2).read()
+            print("✓ daemon reloaded packs")
+        except Exception as e:
+            print(f"⚠  could not reach daemon: {e}", file=sys.stderr)
+            return 1
+        return 0
+
+    print("Usage: tribunal policy {list,enable,disable,lint,reload}")
+    return 2
+
+
+def cmd_scan(args: argparse.Namespace) -> int:
+    from .policy.injection import scan as inj_scan
+
+    if args.path:
+        text = Path(args.path).read_text(errors="replace")
+    else:
+        text = sys.stdin.read()
+    finding = inj_scan(text)
+    if args.json:
+        print(json.dumps(finding.__dict__, indent=2, default=str))
+        return 0 if not finding.suspected else 1
+    if not finding.suspected:
+        print("✓ no injection patterns detected")
+        return 0
+    print(f"  [{finding.severity:<6}] {finding.rule_id:<28} {finding.message}")
+    if finding.snippet:
+        print(f"     snippet: {finding.snippet}")
+    return 1
+
+
+def cmd_adapter(args: argparse.Namespace) -> int:
+    agent = args.agent
+    home = Path.home()
+    print(f"{'Uninstalling' if args.uninstall else 'Installing'} adapter for {agent}...")
+
+    if agent == "claude-code":
+        target = home / ".claude" / "settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if args.uninstall:
+            print(f"  Remove the Tribunal hook from {target} manually.")
+            return 0
+        cfg = json.loads(target.read_text()) if target.exists() else {}
+        cfg.setdefault("hooks", {})
+        cfg["hooks"]["PreToolUse"] = [
+            {"if": {"matcher": ".*"}, "run": [{"command": "tribunal-adapter claude-code pre"}]}
+        ]
+        cfg["hooks"]["PostToolUse"] = [
+            {"if": {"matcher": ".*"}, "run": [{"command": "tribunal-adapter claude-code post"}]}
+        ]
+        target.write_text(json.dumps(cfg, indent=2))
+        print(f"  wrote {target}")
+        return 0
+
+    if agent == "cursor":
+        target = home / ".cursor" / "extensions" / "tribunal" / "hook.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps({"command": "tribunal-adapter cursor"}, indent=2))
+        print(f"  wrote {target}")
+        return 0
+
+    if agent == "copilot-cli":
+        target = home / ".copilot" / "hooks" / "tribunal.sh"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text('#!/usr/bin/env bash\nexec tribunal-adapter copilot-cli "$@"\n')
+        target.chmod(0o755)
+        print(f"  wrote {target}")
+        return 0
+
+    if agent == "codex-cli":
+        target = home / ".codex" / "hooks" / "tribunal.sh"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text('#!/usr/bin/env bash\nexec tribunal-adapter codex-cli "$@"\n')
+        target.chmod(0o755)
+        print(f"  wrote {target}")
+        return 0
+
+    return 1
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="tribunal",
@@ -687,6 +877,49 @@ def main() -> None:
     # doctor
     sub.add_parser("doctor", help="Run health checks on Tribunal setup")
 
+    # ── v3 commands ──────────────────────────────────────────────────────
+
+    # serve — run the local FastAPI daemon
+    serve_p = sub.add_parser("serve", help="Run the Tribunal daemon (localhost:8088)")
+    serve_p.add_argument("--host", default="127.0.0.1")
+    serve_p.add_argument("--port", type=int, default=8088)
+    serve_p.add_argument("--cloud", action="store_true",
+                         help="Ship events to TRIBUNAL_INGEST_URL using TRIBUNAL_INGEST_TOKEN")
+    serve_p.add_argument("--no-policy", action="store_true")
+    serve_p.add_argument("--no-injection-scan", action="store_true")
+
+    # cost — show spend breakdown from the local event store
+    cost_p = sub.add_parser("cost", help="Show cost breakdown from the local event log")
+    cost_p.add_argument("--last", default="7d",
+                        help="Time window, e.g. 24h, 7d, 30d (default: 7d)")
+    cost_p.add_argument("--by", choices=["agent", "user", "model", "session"],
+                        default="agent")
+
+    # policy — pack management (separate from the v1 'pack' command)
+    policy_p = sub.add_parser("policy", help="Manage policy packs (v3)")
+    policy_sub = policy_p.add_subparsers(dest="policy_command")
+    policy_sub.add_parser("list", help="List shipped + custom policy packs")
+    pe = policy_sub.add_parser("enable", help="Enable a shipped pack")
+    pe.add_argument("name")
+    pd = policy_sub.add_parser("disable", help="Disable a pack")
+    pd.add_argument("name")
+    pl = policy_sub.add_parser("lint", help="Validate a YAML policy file")
+    pl.add_argument("path")
+    policy_sub.add_parser("reload", help="Tell the running daemon to reload packs")
+
+    # scan — ad hoc prompt-injection scan on a file or stdin
+    scan_p = sub.add_parser("scan", help="Run the prompt-injection scanner on a file or stdin")
+    scan_p.add_argument("path", nargs="?", help="File to scan (default: stdin)")
+    scan_p.add_argument("--json", action="store_true")
+
+    # adapter — install agent hooks
+    adapter_p = sub.add_parser("adapter", help="Install an agent adapter hook")
+    adapter_p.add_argument(
+        "agent",
+        choices=["claude-code", "cursor", "copilot-cli", "codex-cli"],
+    )
+    adapter_p.add_argument("--uninstall", action="store_true")
+
     args = parser.parse_args()
 
     commands = {
@@ -698,6 +931,11 @@ def main() -> None:
         "pack": cmd_pack,
         "ci": cmd_ci,
         "doctor": cmd_doctor,
+        "serve": cmd_serve,
+        "cost": cmd_cost,
+        "policy": cmd_policy,
+        "scan": cmd_scan,
+        "adapter": cmd_adapter,
     }
 
     handler = commands.get(args.command)

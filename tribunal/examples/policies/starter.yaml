@@ -1,0 +1,51 @@
+# Starter policy pack — sensible defaults for any team.
+#
+# Drop this in ~/.tribunal/policies/ and run:
+#   tribunal policy enable starter
+#
+# Rule order does NOT matter; the evaluator picks the highest-severity
+# effect across all matched rules (deny > ask > warn > allow).
+
+name: starter
+version: "1.0.0"
+description: Sensible defaults — block secret writes, warn on sudo, ask before pushing.
+
+rules:
+  - id: no-env-write
+    effect: deny
+    message: "Refusing to modify .env — secrets belong in 1Password / Secret Manager."
+    match:
+      event_type: tool.proposed
+      tool_name: [edit_file, write_file, str_replace_editor]
+      path_match: ["**/.env", "**/.env.*", "**/secrets/**"]
+
+  - id: warn-on-sudo
+    effect: warn
+    message: "sudo is unusual inside a coding-agent session."
+    match:
+      event_type: tool.proposed
+      tool_name: Bash
+      command_match: "^\\s*sudo\\b"
+
+  - id: ask-before-git-push
+    effect: ask
+    message: "Confirm before pushing to a remote."
+    match:
+      event_type: tool.proposed
+      tool_name: Bash
+      command_match: "^\\s*git\\s+push\\b"
+
+  - id: ask-before-rm-rf
+    effect: ask
+    message: "Destructive recursive delete — confirm the target."
+    match:
+      event_type: tool.proposed
+      tool_name: Bash
+      command_match: "rm\\s+-[a-zA-Z]*r[a-zA-Z]*f?"
+
+  - id: cost-cap-session-5usd
+    effect: warn
+    message: "Session has spent over $5."
+    match:
+      event_type: cost.recorded
+      cost_gte: 5.0

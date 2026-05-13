@@ -1,0 +1,65 @@
+# Tribunal self-hosted stack.
+#
+#   docker compose up -d
+#
+# Starts the daemon on :8088 backed by Postgres. Mount your own
+# policy packs into /policies and they will be auto-loaded.
+#
+# This stack is the same code that powers the hosted SaaS — MIT licensed.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tribunal
+      POSTGRES_USER: tribunal
+      POSTGRES_PASSWORD: ${TRIBUNAL_DB_PASSWORD:-tribunal-change-me}
+    volumes:
+      - tribunal-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tribunal -d tribunal"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  tribunal:
+    image: ghcr.io/thebotclub/tribunal:latest
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TRIBUNAL_DB_URL: postgresql://tribunal:${TRIBUNAL_DB_PASSWORD:-tribunal-change-me}@postgres:5432/tribunal
+      TRIBUNAL_POLICY_DIR: /policies
+      TRIBUNAL_SLACK_WEBHOOK: ${TRIBUNAL_SLACK_WEBHOOK:-}
+      # Set to a long random string. Generates audit-export signatures.
+      TRIBUNAL_SIGNING_KEY: ${TRIBUNAL_SIGNING_KEY:-please-generate-a-random-key}
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./policies:/policies:ro
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8088/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Optional: a tiny reverse proxy that terminates TLS using your cert.
+  # Comment out if you front Tribunal with your own ingress.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [tribunal]
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  tribunal-pg:
+  caddy-data:
+  caddy-config:

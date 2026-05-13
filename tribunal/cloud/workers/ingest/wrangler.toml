@@ -1,0 +1,36 @@
+name = "tribunal-ingest"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Production deploy
+[env.production]
+route = { pattern = "ingest.tribunal.dev/*", zone_name = "tribunal.dev" }
+
+# Bindings — fill these out with `wrangler` before first deploy.
+[[d1_databases]]
+binding = "DB"
+database_name = "tribunal-prod"
+database_id = "REPLACE_WITH_D1_ID"
+
+[[r2_buckets]]
+binding = "EVENTS_BUCKET"
+bucket_name = "tribunal-events-prod"
+
+[[queues.producers]]
+queue = "tribunal-events"
+binding = "EVENT_QUEUE"
+
+# Vars exposed at request time. Secrets (TRIBUNAL_INGEST_HMAC) come from
+# `wrangler secret put TRIBUNAL_INGEST_HMAC`.
+[vars]
+MAX_BATCH_SIZE = "500"
+MAX_EVENT_BYTES = "65536"
+ENV = "production"
+
+# Local dev defaults
+[env.dev]
+[env.dev.vars]
+ENV = "dev"
+MAX_BATCH_SIZE = "100"
+MAX_EVENT_BYTES = "65536"
