@@ -11,7 +11,7 @@ route = { pattern = "ingest.tribunal.dev/*", zone_name = "tribunal.dev" }
 [[d1_databases]]
 binding = "DB"
 database_name = "tribunal-prod"
-database_id = "a8f1b82d-9cc4-445a-85ac-6df526ec1494"
+database_id = "YOUR_D1_DATABASE_ID"  # run `wrangler d1 create tribunal-prod` to get this
 
 [[r2_buckets]]
 binding = "EVENTS_BUCKET"
