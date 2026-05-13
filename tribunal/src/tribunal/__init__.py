@@ -6,4 +6,4 @@ features move under a ``tribunal scan`` subcommand. See ROADMAP-V2.md
 and the v3 execution plan.
 """
 
-__version__ = "3.0.0a1"
+__version__ = "3.0.0"
