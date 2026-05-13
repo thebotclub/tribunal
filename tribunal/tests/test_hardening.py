@@ -1017,4 +1017,4 @@ class TestVersion:
     def test_version_is_current(self):
         from tribunal import __version__
 
-        assert __version__ == "3.0.0a1"
+        assert __version__ == "3.0.1"
