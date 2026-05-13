@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tribunal"
-version = "3.0.0a1"
+version = "3.0.0"
 description = "Quality gates for AI-generated code — TDD enforcement, secret scanning, and audit trails for coding agents."
 readme = "README.md"
 license = "MIT"
@@ -60,4 +60,9 @@ artifacts = ["src/tribunal/py.typed", "spec/event-schema-v1.json", "src/tribunal
 testpaths = ["tests"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/tribunal"]
+include = [
+    "src/tribunal",
+    "spec/event-schema-v1.json",
+    "README.md",
+    "LICENSE",
+]
