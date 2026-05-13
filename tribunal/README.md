@@ -1,5 +1,22 @@
 # Tribunal
 
+> ## Heading to v3 — the open audit and policy layer for coding agents
+>
+> Tribunal is being rebuilt around a single problem: **every team running
+> Claude Code, Cursor, Copilot CLI, and Codex CLI has four separate audit
+> logs, four separate spend caps, and zero cross-agent policy**. The v3 line
+> ships a local daemon + normalised event schema + policy engine that sits
+> underneath all of them. OSS-core (MIT), self-hostable, with a paid hosted
+> tier and a compliance tier.
+>
+> The v2 quality-gate features documented below still work — they’re moving
+> to a `tribunal scan` subcommand in 3.0 and remain supported. If you’re
+> here for CI checkers, you’re in the right place.
+>
+> Target: 3.0.0a1 in week 2, GA in week 9 of the v3 plan.
+
+---
+
 **Quality gates for AI-generated code.** v2.0.1
 
 Tribunal scans code for secrets, enforces TDD, lints Python / TypeScript / Go, and outputs SARIF — in one command. Works everywhere: CI pipelines, pre-commit hooks, local dev. Agent-agnostic.
