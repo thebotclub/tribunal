@@ -231,7 +231,13 @@ def cmd_status(args: argparse.Namespace) -> int:
         for name, rdef in rules.items():
             if isinstance(rdef, dict) and rdef.get("enabled", True):
                 action = rdef.get("action", "block")
-                icon = "[blocked]" if action == "block" else "[!]" if action == "warn" else "[note]"
+                icon = (
+                    "[blocked]"
+                    if action == "block"
+                    else "[!]"
+                    if action == "warn"
+                    else "[note]"
+                )
                 print(f"    {icon} {name}: {rdef.get('message', '')[:60]}")
     else:
         print("  [x] No .tribunal/rules.yaml -- run: tribunal init")
@@ -274,7 +280,13 @@ def cmd_rules(args: argparse.Namespace) -> int:
         message = rdef.get("message", "")
 
         status = "[ok]" if enabled else "[x]"
-        action_icon = "[blocked]" if action == "block" else "[!]" if action == "warn" else "[note]"
+        action_icon = (
+            "[blocked]"
+            if action == "block"
+            else "[!]"
+            if action == "warn"
+            else "[note]"
+        )
 
         print(f"  {status} {name}")
         print(f"    {action_icon} {action} on {trigger}")
@@ -657,7 +669,8 @@ def cmd_cost(args: argparse.Namespace) -> int:
         from .events.store import EventStore
     except ImportError:
         print(
-            "[!]  event store not available -- run 'tribunal init' first", file=sys.stderr
+            "[!]  event store not available -- run 'tribunal init' first",
+            file=sys.stderr,
         )
         return 2
     window_ms = _parse_window(args.last)

@@ -162,7 +162,9 @@ class RuleEngine:
 
         blocking = [r for r in results if r.blocked]
         if blocking:
-            reasons = "\n".join(f"[blocked] [{r.rule.name}] {r.message}" for r in blocking)
+            reasons = "\n".join(
+                f"[blocked] [{r.rule.name}] {r.message}" for r in blocking
+            )
             return HookVerdict(
                 allow=False,
                 reason=f"Tribunal blocked this operation:\n{reasons}",
