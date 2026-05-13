@@ -1,0 +1,51 @@
+{
+  "name": "tribunal",
+  "version": "3.0.0",
+  "description": "Quality gates for AI-generated code — TDD enforcement, secret scanning, and audit trails for coding agents. v3 is Python-first; this npm package is a cross-platform launcher that installs and runs the official Python CLI.",
+  "keywords": [
+    "tribunal",
+    "ai",
+    "governance",
+    "ai-safety",
+    "tdd",
+    "secret-scanning",
+    "code-review",
+    "audit",
+    "claude-code",
+    "cursor",
+    "copilot",
+    "codex",
+    "devops"
+  ],
+  "homepage": "https://tribunal.dev",
+  "bugs": {
+    "url": "https://github.com/thebotclub/tribunal.dev/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "Tribunal Contributors",
+    "email": "hello@tribunal.dev",
+    "url": "https://tribunal.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thebotclub/tribunal.dev.git",
+    "directory": "npm-package"
+  },
+  "bin": {
+    "tribunal": "bin/tribunal.js"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ]
+}

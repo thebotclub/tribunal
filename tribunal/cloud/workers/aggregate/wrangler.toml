@@ -6,11 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "tribunal-prod"
-database_id = "REPLACE_WITH_D1_ID"
+database_id = "a8f1b82d-9cc4-445a-85ac-6df526ec1494"
 
 # This worker is a queue consumer, not HTTP-fronted.
 [[queues.consumers]]
-queue = "tribunal-events"
+queue = "tribunal-events-queue"
 max_batch_size = 100
 max_batch_timeout = 5
 max_retries = 3
