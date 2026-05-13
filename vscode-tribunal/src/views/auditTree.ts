@@ -1,5 +1,5 @@
 /**
- * Audit TreeView — displays recent audit log entries from .tribunal/audit.jsonl.
+ * Audit TreeView -- displays recent audit log entries from .tribunal/audit.jsonl.
  */
 
 import * as vscode from "vscode";
@@ -69,7 +69,7 @@ export class AuditTreeProvider implements vscode.TreeDataProvider<AuditItem> {
 class AuditItem extends vscode.TreeItem {
   constructor(entry: AuditEntry, isEntry: boolean) {
     const label = isEntry
-      ? `${entry.tool || "?"} — ${entry.hook || "?"}`
+      ? `${entry.tool || "?"} -- ${entry.hook || "?"}`
       : (entry.label || "");
     super(label, vscode.TreeItemCollapsibleState.None);
 

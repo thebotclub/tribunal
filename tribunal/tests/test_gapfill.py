@@ -1,4 +1,4 @@
-"""Tests for gap-fill features — P5-P8 completion items."""
+"""Tests for gap-fill features -- P5-P8 completion items."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ def _make_event(hook_name: str, cwd: str, **kwargs) -> HookEvent:
     return HookEvent(**defaults)
 
 
-# ── require_tool rule field ──────────────────────────────────────────────────
+# -- require_tool rule field --------------------------------------------------
 
 
 class TestRequireTool:
@@ -57,7 +57,7 @@ class TestRequireTool:
             assert engine.rules[0].require_tool is True
 
 
-# ── Permission escalation detection ──────────────────────────────────────────
+# -- Permission escalation detection ------------------------------------------
 
 
 class TestPermissionEscalation:
@@ -101,7 +101,7 @@ class TestPermissionEscalation:
             # First: grant
             grant_event = _make_event("PermissionRequest", cwd=tmpdir, tool_name="Bash")
             handle_permission_request(grant_event)
-            # Then: deny same tool → escalation detected
+            # Then: deny same tool -> escalation detected
             deny_event = _make_event("PermissionDenied", cwd=tmpdir, tool_name="Bash")
             handle_permission_denied(deny_event)
             state = json.loads((trib / "state.json").read_text())
@@ -109,7 +109,7 @@ class TestPermissionEscalation:
             assert state["permission_escalations"][0]["type"] == "grant-then-deny"
 
 
-# ── Compaction analytics ─────────────────────────────────────────────────────
+# -- Compaction analytics -----------------------------------------------------
 
 
 class TestCompactionAnalytics:
@@ -158,7 +158,7 @@ class TestCompactionAnalytics:
             assert state["compaction_count"] == 3
 
 
-# ── Per-agent audit trails ───────────────────────────────────────────────────
+# -- Per-agent audit trails ---------------------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.agents archived in 2.0 pivot")
@@ -203,7 +203,7 @@ class TestPerAgentAuditTrails:
             assert get_agent_trail(tmpdir, "nonexistent") == []
 
 
-# ── Task-description permission matching ─────────────────────────────────────
+# -- Task-description permission matching -------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.agents archived in 2.0 pivot")
@@ -297,7 +297,7 @@ class TestAgentPermissions:
             assert allowed is True
 
 
-# ── Memory stats ─────────────────────────────────────────────────────────────
+# -- Memory stats -------------------------------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.memory archived in 2.0 pivot")
@@ -331,7 +331,7 @@ class TestMemoryStats:
             assert "Capacity:" in output
 
 
-# ── Config TypedDict ─────────────────────────────────────────────────────────
+# -- Config TypedDict ---------------------------------------------------------
 
 
 class TestConfigTypedDict:
@@ -354,7 +354,7 @@ class TestConfigTypedDict:
         assert any("Unknown" in e for e in errors)
 
 
-# ── CLI doctor command ───────────────────────────────────────────────────────
+# -- CLI doctor command -------------------------------------------------------
 
 
 class TestDoctorCommand:
@@ -406,7 +406,7 @@ class TestDoctorCommand:
             assert "tribunal-gate is on PATH" in captured.out
 
 
-# ── CLI audit rotate ─────────────────────────────────────────────────────────
+# -- CLI audit rotate ---------------------------------------------------------
 
 
 class TestAuditRotateCLI:
@@ -437,7 +437,7 @@ class TestAuditRotateCLI:
             assert "below rotation threshold" in captured.out
 
 
-# ── CLI config validate ──────────────────────────────────────────────────────
+# -- CLI config validate ------------------------------------------------------
 
 
 class TestConfigValidateCLI:

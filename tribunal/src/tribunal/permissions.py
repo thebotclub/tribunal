@@ -40,7 +40,7 @@ class PermissionPolicy:
         return result
 
 
-# ── Preset Policies ──────────────────────────────────────────────────────────
+# -- Preset Policies ----------------------------------------------------------
 
 _PRESETS: dict[str, PermissionPolicy] = {
     "strict": PermissionPolicy(
@@ -137,13 +137,13 @@ def format_policy(policy: PermissionPolicy) -> str:
     if policy.deny:
         lines.append("  Deny rules:")
         for r in policy.deny:
-            lines.append(f"    ⛔ {r.tool}: {r.pattern}")
+            lines.append(f"    [blocked] {r.tool}: {r.pattern}")
             if r.description:
                 lines.append(f"       {r.description}")
     if policy.allow:
         lines.append("  Allow rules:")
         for r in policy.allow:
-            lines.append(f"    ✓ {r.tool}: {r.pattern}")
+            lines.append(f"    [ok] {r.tool}: {r.pattern}")
             if r.description:
                 lines.append(f"       {r.description}")
     return "\n".join(lines)

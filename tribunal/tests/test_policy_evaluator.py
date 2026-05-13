@@ -1,4 +1,4 @@
-"""Tests for tribunal.policy.evaluator — YAML rule packs + event eval."""
+"""Tests for tribunal.policy.evaluator -- YAML rule packs + event eval."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import pytest
 from tribunal.policy import evaluator as pol
 
 
-# ── Constructors ────────────────────────────────────────────────────────────
+# -- Constructors ------------------------------------------------------------
 
 
 def test_rule_rejects_unknown_action() -> None:
@@ -39,7 +39,7 @@ def test_decision_helpers() -> None:
     assert pol.Decision(action="warn").should_log is True
 
 
-# ── load_pack ───────────────────────────────────────────────────────────────
+# -- load_pack ---------------------------------------------------------------
 
 
 def test_load_pack_from_mapping() -> None:
@@ -94,7 +94,7 @@ def test_load_shipped_packs_finds_three() -> None:
     assert {"secrets-readonly", "no-prod-writes", "soc2-baseline"}.issubset(names)
 
 
-# ── evaluate() — priority semantics ─────────────────────────────────────────
+# -- evaluate() -- priority semantics -----------------------------------------
 
 
 def _event(**overrides: Any) -> dict:
@@ -179,7 +179,7 @@ def test_evaluate_multiple_packs() -> None:
     assert d.pack == "b"
 
 
-# ── Predicates ──────────────────────────────────────────────────────────────
+# -- Predicates --------------------------------------------------------------
 
 
 def _pack_with(action: str = "deny", **when: Any) -> pol.PolicyPack:
@@ -288,7 +288,7 @@ def test_unknown_predicate_silently_fails_match() -> None:
     assert pol.evaluate(_event(), [pack]).action == "allow"
 
 
-# ── Shipped packs — real events ─────────────────────────────────────────────
+# -- Shipped packs -- real events ---------------------------------------------
 
 
 def test_secrets_readonly_blocks_env_write() -> None:

@@ -34,7 +34,7 @@ from tribunal.checkers.tdd import (
 from tribunal.sarif import findings_to_sarif, sarif_to_json
 
 
-# ── Fixtures ──────────────────────────────────────────────────────────────────
+# -- Fixtures ------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -47,7 +47,7 @@ def tmp_project(tmp_path: Path) -> Path:
     return tmp_path
 
 
-# ── CheckResult / Finding dataclass tests ─────────────────────────────────────
+# -- CheckResult / Finding dataclass tests -------------------------------------
 
 
 class TestDataclasses:
@@ -103,7 +103,7 @@ class TestDataclasses:
         assert r.passed is False
 
 
-# ── Secrets checker tests ─────────────────────────────────────────────────────
+# -- Secrets checker tests -----------------------------------------------------
 
 
 class TestSecretsChecker:
@@ -201,7 +201,7 @@ class TestSecretsChecker:
             assert compiled is not None, f"Pattern for {rule_id} failed to compile"
 
 
-# ── TDD checker tests ─────────────────────────────────────────────────────────
+# -- TDD checker tests ---------------------------------------------------------
 
 
 class TestTDDChecker:
@@ -290,7 +290,7 @@ class TestTDDChecker:
         assert len(result.findings) == 0
 
 
-# ── TDD dependency graph tests ────────────────────────────────────────────────
+# -- TDD dependency graph tests ------------------------------------------------
 
 
 class TestDependencyGraph:
@@ -350,7 +350,7 @@ class TestDependencyGraph:
         assert _has_go_test(f) is True
 
 
-# ── SARIF output tests ────────────────────────────────────────────────────────
+# -- SARIF output tests --------------------------------------------------------
 
 
 class TestSARIF:
@@ -502,7 +502,7 @@ class TestSARIF:
         assert "region" not in loc  # line=0 means file-level
 
 
-# ── collect_files tests ───────────────────────────────────────────────────────
+# -- collect_files tests -------------------------------------------------------
 
 
 class TestCollectFiles:
@@ -537,7 +537,7 @@ class TestCollectFiles:
         assert files[0] == f1
 
 
-# ── Integration: run_checkers ─────────────────────────────────────────────────
+# -- Integration: run_checkers -------------------------------------------------
 
 
 class TestRunCheckers:
@@ -585,7 +585,7 @@ class TestRunCheckers:
         assert results == []
 
 
-# ── CLI ci command tests ──────────────────────────────────────────────────────
+# -- CLI ci command tests ------------------------------------------------------
 
 
 class TestCLICommand:

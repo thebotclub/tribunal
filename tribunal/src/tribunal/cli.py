@@ -1,4 +1,4 @@
-"""Tribunal CLI — quality gates for AI-generated code.
+"""Tribunal CLI -- quality gates for AI-generated code.
 
 Commands:
   tribunal init         Set up hooks in the current project
@@ -23,7 +23,7 @@ import yaml
 from . import __version__
 
 
-# ── Config Templates ──────────────────────────────────────────────────────────
+# -- Config Templates ----------------------------------------------------------
 
 _CLAUDE_CONFIG = {
     "hooks": {
@@ -104,7 +104,7 @@ _DEFAULT_RULES = {
 }
 
 
-# ── Commands ──────────────────────────────────────────────────────────────────
+# -- Commands ------------------------------------------------------------------
 
 
 def cmd_init(args: argparse.Namespace) -> int:
@@ -117,11 +117,11 @@ def cmd_init(args: argparse.Namespace) -> int:
 
     rules_path = tribunal_dir / "rules.yaml"
     if rules_path.exists() and not args.force:
-        print(f"  ✓ Rules already exist at {rules_path.relative_to(project_dir)}")
+        print(f"  [ok] Rules already exist at {rules_path.relative_to(project_dir)}")
     else:
         with open(rules_path, "w") as f:
             yaml.dump(_DEFAULT_RULES, f, default_flow_style=False, sort_keys=False)
-        print(f"  ✓ Created {rules_path.relative_to(project_dir)}")
+        print(f"  [ok] Created {rules_path.relative_to(project_dir)}")
 
     # 2. Create/update .claude/claudeconfig.json
     claude_dir = project_dir / ".claude"
@@ -141,11 +141,11 @@ def cmd_init(args: argparse.Namespace) -> int:
                 existing["hooks"][event] = existing_hooks + hooks
         with open(config_path, "w") as f:
             json.dump(existing, f, indent=2)
-        print(f"  ✓ Updated {config_path.relative_to(project_dir)} (merged hooks)")
+        print(f"  [ok] Updated {config_path.relative_to(project_dir)} (merged hooks)")
     else:
         with open(config_path, "w") as f:
             json.dump(_CLAUDE_CONFIG, f, indent=2)
-        print(f"  ✓ Created {config_path.relative_to(project_dir)}")
+        print(f"  [ok] Created {config_path.relative_to(project_dir)}")
 
     # 3. Create .tribunal/.gitkeep for version control
     gitkeep = tribunal_dir / ".gitkeep"
@@ -168,28 +168,28 @@ def cmd_init(args: argparse.Namespace) -> int:
                 f.write("\n# tribunal audit log (local only)\n")
                 for line in additions:
                     f.write(line + "\n")
-            print("  ✓ Added tribunal paths to .gitignore")
+            print("  [ok] Added tribunal paths to .gitignore")
     else:
         with open(gitignore, "w") as f:
             f.write("# tribunal audit log (local only)\n")
             f.write(ignore_line + "\n")
             f.write(ignore_state + "\n")
-        print("  ✓ Created .gitignore with tribunal exclusions")
+        print("  [ok] Created .gitignore with tribunal exclusions")
 
     # 5. Check if tribunal-gate is on PATH
     if not shutil.which("tribunal-gate"):
         print()
-        print("  ⚠  tribunal-gate not found on PATH.")
+        print("  [!]  tribunal-gate not found on PATH.")
         print("     Make sure tribunal is installed: pip install tribunal")
         print()
 
     print()
-    print("  ⚖  Tribunal initialized.")
+    print("  [T]  Tribunal initialized.")
     print()
     print("  Your AI coding sessions now enforce:")
-    print("    • TDD — tests required before production code")
-    print("    • Secret scanning — no hardcoded credentials")
-    print("    • Audit trail — all tool calls logged")
+    print("    * TDD -- tests required before production code")
+    print("    * Secret scanning -- no hardcoded credentials")
+    print("    * Audit trail -- all tool calls logged")
     print()
     print("  Customize rules in .tribunal/rules.yaml")
     print("  View audit log with: tribunal audit")
@@ -203,7 +203,7 @@ def cmd_status(args: argparse.Namespace) -> int:
     config_path = project_dir / ".claude" / "claudeconfig.json"
     audit_path = project_dir / ".tribunal" / "audit.jsonl"
 
-    print(f"\n  ⚖  Tribunal v{__version__}\n")
+    print(f"\n  [T]  Tribunal v{__version__}\n")
 
     if config_path.exists():
         with open(config_path) as f:
@@ -213,12 +213,12 @@ def cmd_status(args: argparse.Namespace) -> int:
         has_tribunal = "tribunal-gate" in json.dumps(hooks)
         if has_tribunal:
             print(
-                f"  ✓ Hooks active — {hook_count} hook(s) in .claude/claudeconfig.json"
+                f"  [ok] Hooks active -- {hook_count} hook(s) in .claude/claudeconfig.json"
             )
         else:
-            print("  ⚠ Hooks exist but tribunal-gate not configured")
+            print("  [!] Hooks exist but tribunal-gate not configured")
     else:
-        print("  ✗ No .claude/claudeconfig.json — run: tribunal init")
+        print("  [x] No .claude/claudeconfig.json -- run: tribunal init")
 
     if rules_path.exists():
         with open(rules_path) as f:
@@ -227,22 +227,22 @@ def cmd_status(args: argparse.Namespace) -> int:
         enabled = sum(
             1 for r in rules.values() if isinstance(r, dict) and r.get("enabled", True)
         )
-        print(f"  ✓ {enabled} rule(s) active in .tribunal/rules.yaml")
+        print(f"  [ok] {enabled} rule(s) active in .tribunal/rules.yaml")
         for name, rdef in rules.items():
             if isinstance(rdef, dict) and rdef.get("enabled", True):
                 action = rdef.get("action", "block")
-                icon = "⛔" if action == "block" else "⚠️" if action == "warn" else "📝"
+                icon = "[blocked]" if action == "block" else "[!]" if action == "warn" else "[note]"
                 print(f"    {icon} {name}: {rdef.get('message', '')[:60]}")
     else:
-        print("  ✗ No .tribunal/rules.yaml — run: tribunal init")
+        print("  [x] No .tribunal/rules.yaml -- run: tribunal init")
 
     if audit_path.exists():
         lines = audit_path.read_text().strip().split("\n")
         total = len(lines)
         blocked = sum(1 for line in lines if '"allowed":false' in line)
-        print(f"  📋 {total} audit entries ({blocked} blocked)")
+        print(f"  [list] {total} audit entries ({blocked} blocked)")
     else:
-        print("  📋 No audit log yet")
+        print("  [list] No audit log yet")
 
     print()
     return 0
@@ -261,7 +261,7 @@ def cmd_rules(args: argparse.Namespace) -> int:
         data = yaml.safe_load(f) or {}
 
     rules = data.get("rules", {})
-    print(f"\n  ⚖  Tribunal Rules ({len(rules)} total)\n")
+    print(f"\n  [T]  Tribunal Rules ({len(rules)} total)\n")
 
     for name, rdef in rules.items():
         if not isinstance(rdef, dict):
@@ -273,8 +273,8 @@ def cmd_rules(args: argparse.Namespace) -> int:
         condition = rdef.get("condition", "")
         message = rdef.get("message", "")
 
-        status = "✓" if enabled else "✗"
-        action_icon = "⛔" if action == "block" else "⚠️" if action == "warn" else "📝"
+        status = "[ok]" if enabled else "[x]"
+        action_icon = "[blocked]" if action == "block" else "[!]" if action == "warn" else "[note]"
 
         print(f"  {status} {name}")
         print(f"    {action_icon} {action} on {trigger}")
@@ -283,7 +283,7 @@ def cmd_rules(args: argparse.Namespace) -> int:
         if condition:
             print(f"    condition: {condition}")
         if message:
-            print(f"    → {message[:80]}")
+            print(f"    -> {message[:80]}")
         print()
 
     return 0
@@ -304,9 +304,9 @@ def cmd_audit(args: argparse.Namespace) -> int:
             return 0
         rotated = rotate_audit_log(audit_path)
         if rotated:
-            print("  ✓ Audit log rotated.")
+            print("  [ok] Audit log rotated.")
         else:
-            print("  ✓ Audit log below rotation threshold — no action needed.")
+            print("  [ok] Audit log below rotation threshold -- no action needed.")
         return 0
 
     if not audit_path.exists():
@@ -317,7 +317,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
     count = args.count if hasattr(args, "count") else 20
 
     recent = lines[-count:]
-    print(f"\n  📋 Audit Log (last {len(recent)} of {len(lines)} entries)\n")
+    print(f"\n  [list] Audit Log (last {len(recent)} of {len(lines)} entries)\n")
 
     for line in recent:
         try:
@@ -329,7 +329,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
             path = entry.get("path", "")
             cmd = entry.get("command", "")
 
-            icon = "✓" if allowed else "⛔"
+            icon = "[ok]" if allowed else "[blocked]"
             detail = path or cmd[:50] or ""
 
             print(f"  {icon} {ts} {hook:15s} {tool:12s} {detail}")
@@ -354,13 +354,13 @@ def cmd_config(args: argparse.Namespace) -> int:
         data = yaml.safe_load(config_path.read_text()) or {}
         errors = validate_config(data)
         if errors:
-            print(f"\n  ⚠  Config validation found {len(errors)} issue(s):\n")
+            print(f"\n  [!]  Config validation found {len(errors)} issue(s):\n")
             for e in errors:
-                print(f"    ✗ {e}")
+                print(f"    [x] {e}")
             print()
             return 1
         else:
-            print("  ✓ Configuration is valid.")
+            print("  [ok] Configuration is valid.")
             return 0
 
     config = resolve_config(str(Path.cwd()))
@@ -382,7 +382,7 @@ def cmd_pack(args: argparse.Namespace) -> int:
         merge = not getattr(args, "replace", False)
         ok, messages = install_pack(name, str(Path.cwd()), merge=merge)
         for msg in messages:
-            print(f"  {'✓' if ok else '✗'} {msg}")
+            print(f"  {'[ok]' if ok else '[x]'} {msg}")
         return 0 if ok else 1
     return 0
 
@@ -462,15 +462,15 @@ def cmd_ci(args: argparse.Namespace) -> int:
             print(output)
     else:
         # Text format
-        print(f"\n  ⚖  Tribunal CI — {len(files)} file(s) checked\n")
+        print(f"\n  [T]  Tribunal CI -- {len(files)} file(s) checked\n")
         if all_findings:
             for finding in all_findings:
                 icon = (
-                    "⛔"
+                    "[blocked]"
                     if finding.severity == "error"
-                    else "⚠️"
+                    else "[!]"
                     if finding.severity == "warning"
-                    else "ℹ️"
+                    else "(i)"
                 )
                 loc = f":{finding.line}" if finding.line > 0 else ""
                 print(f"  {icon} {finding.file}{loc}")
@@ -478,11 +478,11 @@ def cmd_ci(args: argparse.Namespace) -> int:
                 print(f"    [{finding.rule_id}]")
                 print()
         if errors:
-            print(f"  ✗ {len(errors)} error(s), {len(warnings)} warning(s)")
+            print(f"  [x] {len(errors)} error(s), {len(warnings)} warning(s)")
         elif warnings:
-            print(f"  ⚠ {len(warnings)} warning(s), 0 errors")
+            print(f"  [!] {len(warnings)} warning(s), 0 errors")
         else:
-            print("  ✓ All checks passed.")
+            print("  [ok] All checks passed.")
         print()
 
     # Exit code: 1 if errors, 0 otherwise
@@ -495,21 +495,21 @@ def cmd_doctor(args: argparse.Namespace) -> int:
     issues = 0
     warnings = 0
 
-    print(f"\n  ⚖  Tribunal Doctor v{__version__}\n")
+    print(f"\n  [T]  Tribunal Doctor v{__version__}\n")
 
     # 1. Check tribunal-gate on PATH
     if shutil.which("tribunal-gate"):
-        print("  ✓ tribunal-gate is on PATH")
+        print("  [ok] tribunal-gate is on PATH")
     else:
-        print("  ✗ tribunal-gate not found on PATH")
+        print("  [x] tribunal-gate not found on PATH")
         issues += 1
 
     # 2. Check .tribunal/ directory
     tribunal_dir = project_dir / ".tribunal"
     if tribunal_dir.is_dir():
-        print("  ✓ .tribunal/ directory exists")
+        print("  [ok] .tribunal/ directory exists")
     else:
-        print("  ✗ .tribunal/ directory missing — run: tribunal init")
+        print("  [x] .tribunal/ directory missing -- run: tribunal init")
         issues += 1
 
     # 3. Check rules.yaml
@@ -518,7 +518,7 @@ def cmd_doctor(args: argparse.Namespace) -> int:
         try:
             data = yaml.safe_load(rules_path.read_text()) or {}
             rules = data.get("rules", {})
-            print(f"  ✓ rules.yaml — {len(rules)} rule(s)")
+            print(f"  [ok] rules.yaml -- {len(rules)} rule(s)")
 
             for name, rdef in rules.items():
                 if not isinstance(rdef, dict):
@@ -526,12 +526,12 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                 condition = rdef.get("condition", "")
                 if condition == "type-check":
                     if not shutil.which("mypy"):
-                        print(f"  ⚠ Rule '{name}' needs mypy but it's not installed")
+                        print(f"  [!] Rule '{name}' needs mypy but it's not installed")
                         warnings += 1
                 if condition == "lint-check":
                     if not shutil.which("ruff") and not shutil.which("flake8"):
                         print(
-                            f"  ⚠ Rule '{name}' needs ruff/flake8 but neither is installed"
+                            f"  [!] Rule '{name}' needs ruff/flake8 but neither is installed"
                         )
                         warnings += 1
                 run_cmd = rdef.get("run", "")
@@ -539,14 +539,14 @@ def cmd_doctor(args: argparse.Namespace) -> int:
                     cmd_name = run_cmd.split()[0] if run_cmd else ""
                     if cmd_name and not shutil.which(cmd_name):
                         print(
-                            f"  ⚠ Rule '{name}' runs '{cmd_name}' but it's not installed"
+                            f"  [!] Rule '{name}' runs '{cmd_name}' but it's not installed"
                         )
                         warnings += 1
         except yaml.YAMLError as e:
-            print(f"  ✗ rules.yaml is invalid YAML: {e}")
+            print(f"  [x] rules.yaml is invalid YAML: {e}")
             issues += 1
     else:
-        print("  ✗ rules.yaml missing — run: tribunal init")
+        print("  [x] rules.yaml missing -- run: tribunal init")
         issues += 1
 
     # 4. Check claudeconfig.json
@@ -560,16 +560,16 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             if has_tribunal:
                 hook_count = sum(len(v) for v in hooks.values())
                 print(
-                    f"  ✓ claudeconfig.json — {hook_count} hook(s) with tribunal-gate"
+                    f"  [ok] claudeconfig.json -- {hook_count} hook(s) with tribunal-gate"
                 )
             else:
-                print("  ⚠ claudeconfig.json exists but tribunal-gate not configured")
+                print("  [!] claudeconfig.json exists but tribunal-gate not configured")
                 warnings += 1
         except (json.JSONDecodeError, OSError):
-            print("  ✗ claudeconfig.json is invalid")
+            print("  [x] claudeconfig.json is invalid")
             issues += 1
     else:
-        print("  ✗ .claude/claudeconfig.json missing — run: tribunal init")
+        print("  [x] .claude/claudeconfig.json missing -- run: tribunal init")
         issues += 1
 
     # 5. Check .tribunal/config.yaml if present
@@ -581,42 +581,42 @@ def cmd_doctor(args: argparse.Namespace) -> int:
             data = yaml.safe_load(cfg_path.read_text()) or {}
             errors = validate_config(data)
             if errors:
-                print(f"  ⚠ config.yaml has {len(errors)} validation issue(s)")
+                print(f"  [!] config.yaml has {len(errors)} validation issue(s)")
                 warnings += len(errors)
             else:
-                print("  ✓ config.yaml is valid")
+                print("  [ok] config.yaml is valid")
         except yaml.YAMLError:
-            print("  ✗ config.yaml is invalid YAML")
+            print("  [x] config.yaml is invalid YAML")
             issues += 1
 
     # 6. Check audit log
     audit_path = tribunal_dir / "audit.jsonl"
     if audit_path.is_file():
         size = audit_path.stat().st_size
-        print(f"  ✓ audit.jsonl exists ({size:,} bytes)")
+        print(f"  [ok] audit.jsonl exists ({size:,} bytes)")
         if size > 10_000_000:
-            print("  ⚠ Audit log exceeds 10MB — consider: tribunal audit rotate")
+            print("  [!] Audit log exceeds 10MB -- consider: tribunal audit rotate")
             warnings += 1
     else:
-        print("  ○ No audit log yet (will be created on first session)")
+        print("  ( ) No audit log yet (will be created on first session)")
 
     # Summary
     print()
     if issues == 0 and warnings == 0:
-        print("  ✓ All checks passed.")
+        print("  [ok] All checks passed.")
     else:
         if issues:
-            print(f"  ✗ {issues} issue(s) found")
+            print(f"  [x] {issues} issue(s) found")
         if warnings:
-            print(f"  ⚠ {warnings} warning(s)")
+            print(f"  [!] {warnings} warning(s)")
     print()
     return 1 if issues > 0 else 0
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# -- Main ----------------------------------------------------------------------
 
 
-# ── v3 command handlers ─────────────────────────────────────────────────────────────
+# -- v3 command handlers -------------------------------------------------------------
 
 
 def _parse_window(spec: str) -> int:
@@ -637,7 +637,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
         from .daemon import create_app
     except ImportError as e:
-        print(f"⚠  daemon dependencies missing: {e}", file=sys.stderr)
+        print(f"[!]  daemon dependencies missing: {e}", file=sys.stderr)
         print("   Install with: pipx install 'tribunal[daemon]'", file=sys.stderr)
         return 2
 
@@ -645,7 +645,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
         enable_policy=not args.no_policy,
         enable_injection_scan=not args.no_injection_scan,
     )
-    print(f"△ Tribunal daemon · http://{args.host}:{args.port}")
+    print(f"[^] Tribunal daemon * http://{args.host}:{args.port}")
     if args.cloud:
         print("  Cloud mode: events will be batched to TRIBUNAL_INGEST_URL")
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
@@ -657,7 +657,7 @@ def cmd_cost(args: argparse.Namespace) -> int:
         from .events.store import EventStore
     except ImportError:
         print(
-            "⚠  event store not available — run 'tribunal init' first", file=sys.stderr
+            "[!]  event store not available -- run 'tribunal init' first", file=sys.stderr
         )
         return 2
     window_ms = _parse_window(args.last)
@@ -669,13 +669,13 @@ def cmd_cost(args: argparse.Namespace) -> int:
     if not rows:
         print(f"No events with cost data in the last {args.last}.")
         return 0
-    print(f"Cost breakdown by {args.by} · last {args.last}")
-    print("─" * 60)
+    print(f"Cost breakdown by {args.by} * last {args.last}")
+    print("-" * 60)
     total = 0.0
     for key, usd, events in rows:
         print(f"  {key:<32}  ${usd:>8.4f}   ({events} events)")
         total += usd
-    print("─" * 60)
+    print("-" * 60)
     print(f"  {'TOTAL':<32}  ${total:>8.4f}")
     return 0
 
@@ -694,7 +694,7 @@ def cmd_policy(args: argparse.Namespace) -> int:
         ef = state_dir / "enabled-packs.txt"
         enabled = set(ef.read_text().splitlines()) if ef.exists() else set()
         for p in packs:
-            mark = "✓" if p.name in enabled else " "
+            mark = "[ok]" if p.name in enabled else " "
             print(f"  [{mark}] {p.name:<24}  v{p.version}  ({len(p.rules)} rules)")
         return 0
 
@@ -705,10 +705,10 @@ def cmd_policy(args: argparse.Namespace) -> int:
         enabled = set(f.read_text().splitlines()) if f.exists() else set()
         if sub == "enable":
             enabled.add(args.name)
-            print(f"✓ enabled pack: {args.name}")
+            print(f"[ok] enabled pack: {args.name}")
         else:
             enabled.discard(args.name)
-            print(f"✓ disabled pack: {args.name}")
+            print(f"[ok] disabled pack: {args.name}")
         f.write_text("\n".join(sorted(enabled)) + "\n")
         return 0
 
@@ -716,9 +716,9 @@ def cmd_policy(args: argparse.Namespace) -> int:
         try:
             pack = load_pack(Path(args.path))
         except Exception as e:
-            print(f"✗ invalid: {e}", file=sys.stderr)
+            print(f"[x] invalid: {e}", file=sys.stderr)
             return 1
-        print(f"✓ valid pack: {pack.name} v{pack.version} ({len(pack.rules)} rules)")
+        print(f"[ok] valid pack: {pack.name} v{pack.version} ({len(pack.rules)} rules)")
         return 0
 
     if sub == "reload":
@@ -730,9 +730,9 @@ def cmd_policy(args: argparse.Namespace) -> int:
                 "http://127.0.0.1:8088/v1/policy/reload", method="POST"
             )
             urllib.request.urlopen(req, timeout=2).read()
-            print("✓ daemon reloaded packs")
+            print("[ok] daemon reloaded packs")
         except Exception as e:
-            print(f"⚠  could not reach daemon: {e}", file=sys.stderr)
+            print(f"[!]  could not reach daemon: {e}", file=sys.stderr)
             return 1
         return 0
 
@@ -752,7 +752,7 @@ def cmd_scan(args: argparse.Namespace) -> int:
         print(json.dumps(finding.__dict__, indent=2, default=str))
         return 0 if not finding.suspected else 1
     if not finding.suspected:
-        print("✓ no injection patterns detected")
+        print("[ok] no injection patterns detected")
         return 0
     print(f"  [{finding.severity:<6}] {finding.rule_id:<28} {finding.message}")
     if finding.snippet:
@@ -890,9 +890,9 @@ def main() -> None:
     # doctor
     sub.add_parser("doctor", help="Run health checks on Tribunal setup")
 
-    # ── v3 commands ──────────────────────────────────────────────────────
+    # -- v3 commands ------------------------------------------------------
 
-    # serve — run the local FastAPI daemon
+    # serve -- run the local FastAPI daemon
     serve_p = sub.add_parser("serve", help="Run the Tribunal daemon (localhost:8088)")
     serve_p.add_argument("--host", default="127.0.0.1")
     serve_p.add_argument("--port", type=int, default=8088)
@@ -904,7 +904,7 @@ def main() -> None:
     serve_p.add_argument("--no-policy", action="store_true")
     serve_p.add_argument("--no-injection-scan", action="store_true")
 
-    # cost — show spend breakdown from the local event store
+    # cost -- show spend breakdown from the local event store
     cost_p = sub.add_parser("cost", help="Show cost breakdown from the local event log")
     cost_p.add_argument(
         "--last", default="7d", help="Time window, e.g. 24h, 7d, 30d (default: 7d)"
@@ -913,7 +913,7 @@ def main() -> None:
         "--by", choices=["agent", "user", "model", "session"], default="agent"
     )
 
-    # policy — pack management (separate from the v1 'pack' command)
+    # policy -- pack management (separate from the v1 'pack' command)
     policy_p = sub.add_parser("policy", help="Manage policy packs (v3)")
     policy_sub = policy_p.add_subparsers(dest="policy_command")
     policy_sub.add_parser("list", help="List shipped + custom policy packs")
@@ -925,14 +925,14 @@ def main() -> None:
     pl.add_argument("path")
     policy_sub.add_parser("reload", help="Tell the running daemon to reload packs")
 
-    # scan — ad hoc prompt-injection scan on a file or stdin
+    # scan -- ad hoc prompt-injection scan on a file or stdin
     scan_p = sub.add_parser(
         "scan", help="Run the prompt-injection scanner on a file or stdin"
     )
     scan_p.add_argument("path", nargs="?", help="File to scan (default: stdin)")
     scan_p.add_argument("--json", action="store_true")
 
-    # adapter — install agent hooks
+    # adapter -- install agent hooks
     adapter_p = sub.add_parser("adapter", help="Install an agent adapter hook")
     adapter_p.add_argument(
         "agent",

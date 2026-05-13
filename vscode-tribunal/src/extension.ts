@@ -1,5 +1,5 @@
 /**
- * Tribunal VS Code Extension — main entry point.
+ * Tribunal VS Code Extension -- main entry point.
  *
  * Provides:
  * - Activity bar with Rules/Audit/Agents/Cost tree views

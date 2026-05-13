@@ -1,4 +1,4 @@
-# Strict policy pack — for production-adjacent repos.
+# Strict policy pack -- for production-adjacent repos.
 #
 # Combines well with the shipped 'soc2-baseline' pack:
 #   tribunal policy enable soc2-baseline
@@ -27,7 +27,7 @@ rules:
 
   - id: ask-before-curl
     effect: ask
-    message: "Outbound network call — confirm intent."
+    message: "Outbound network call -- confirm intent."
     match:
       event_type: tool.proposed
       tool_name: Bash
@@ -43,7 +43,7 @@ rules:
 
   - id: cost-cap-session-25usd
     effect: deny
-    message: "Session cost cap exceeded — kill switch."
+    message: "Session cost cap exceeded -- kill switch."
     match:
       event_type: cost.recorded
       cost_gte: 25.0

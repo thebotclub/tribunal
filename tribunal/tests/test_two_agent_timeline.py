@@ -1,4 +1,4 @@
-"""Two-agent integration test — Claude Code + Cursor in one timeline.
+"""Two-agent integration test -- Claude Code + Cursor in one timeline.
 
 This is the milestone Week-4 acceptance test: events from both adapters
 land in the same EventStore, the daemon's /v1/events endpoint returns
@@ -163,7 +163,7 @@ def _run_cursor_session(client: TestClient, repo: str = "/repo") -> int:
     return body["accepted"]
 
 
-# ── Tests ────────────────────────────────────────────────────────────────────
+# -- Tests --------------------------------------------------------------------
 
 
 def test_two_agents_share_one_timeline(env: tuple[EventStore, TestClient]) -> None:
@@ -174,14 +174,14 @@ def test_two_agents_share_one_timeline(env: tuple[EventStore, TestClient]) -> No
     assert cc_count >= 5
     assert cur_count >= 5
 
-    # /v1/stats — every agent attributed
+    # /v1/stats -- every agent attributed
     stats = client.get("/v1/stats").json()
     assert set(stats["by_agent"].keys()) == {"claude-code", "cursor"}
     assert stats["by_agent"]["claude-code"] == cc_count
     assert stats["by_agent"]["cursor"] == cur_count
     assert stats["cost_usd"] == pytest.approx(0.04)
 
-    # /v1/events — newest first
+    # /v1/events -- newest first
     events = client.get("/v1/events").json()["events"]
     assert len(events) == cc_count + cur_count
     # Last sent (Cursor cost.recorded) should be at the top

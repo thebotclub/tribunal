@@ -1,4 +1,4 @@
-"""Adapter installers — wire Tribunal into each agent's local config.
+"""Adapter installers -- wire Tribunal into each agent's local config.
 
 For Claude Code we edit ``~/.claude/settings.json`` and add (or refresh) a
 ``hooks`` entry that forwards every hook event to the Tribunal daemon via
@@ -7,7 +7,7 @@ the ``tribunal adapter claude-code`` shim command.
 For Cursor we drop a config file under the user's Cursor data directory
 (W4). Each installer:
 
-  - Is idempotent — safe to run repeatedly.
+  - Is idempotent -- safe to run repeatedly.
   - Backs up the existing file the first time it writes.
   - Honours dry-run mode for the CLI's ``--dry-run`` flag.
   - Reports what it would do via :class:`InstallReport`.
@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-# ── Result type ──────────────────────────────────────────────────────────────
+# -- Result type --------------------------------------------------------------
 
 
 @dataclass
@@ -41,7 +41,7 @@ class InstallReport:
     error: str = ""
 
 
-# ── Claude Code installer ────────────────────────────────────────────────────
+# -- Claude Code installer ----------------------------------------------------
 
 _CLAUDE_HOOK_EVENTS = (
     "SessionStart",
@@ -151,7 +151,7 @@ def uninstall_claude_code(*, settings_path: Optional[Path] = None) -> InstallRep
     return report
 
 
-# ── Cursor installer (skeleton — Week 4 will wire the matching adapter) ──────
+# -- Cursor installer (skeleton -- Week 4 will wire the matching adapter) ------
 
 
 def _cursor_config_path() -> Path:
@@ -216,7 +216,7 @@ def install_cursor(
     return report
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 
 def _read_json_safe(path: Path) -> dict:
@@ -226,7 +226,7 @@ def _read_json_safe(path: Path) -> dict:
         return json.loads(path.read_text(encoding="utf-8")) or {}
     except json.JSONDecodeError:
         # Don't clobber a hand-edited file with a syntax error.
-        raise RuntimeError(f"{path} is not valid JSON — refusing to overwrite")
+        raise RuntimeError(f"{path} is not valid JSON -- refusing to overwrite")
 
 
 def _has_tribunal_hook(entries: list) -> bool:

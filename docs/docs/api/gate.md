@@ -32,8 +32,8 @@
 
 | Code | Meaning |
 |------|---------|
-| 0 | Allow — operation proceeds |
-| 2 | Block — operation is prevented |
+| 0 | Allow -- operation proceeds |
+| 2 | Block -- operation is prevented |
 
 ## Hook Registration
 

@@ -1,0 +1,8 @@
+# Default owners for everything in the repo.
+* @koshaji
+
+# CI and release workflows -- be extra careful.
+/.github/ @koshaji
+
+# Event schema is a public contract -- changes need an extra eye.
+/tribunal/spec/ @koshaji

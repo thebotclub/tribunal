@@ -1,4 +1,4 @@
-"""Tests for tribunal.events.store — local SQLite event store."""
+"""Tests for tribunal.events.store -- local SQLite event store."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _ev(**kwargs) -> dict:
     return new_event(**base)
 
 
-# ── Basic insert/read ────────────────────────────────────────────────────────
+# -- Basic insert/read --------------------------------------------------------
 
 
 def test_init_creates_schema(tmp_path: Path) -> None:
@@ -77,7 +77,7 @@ def test_insert_many_skips_invalid(store: EventStore) -> None:
     assert store.count() == 2
 
 
-# ── Reads ────────────────────────────────────────────────────────────────────
+# -- Reads --------------------------------------------------------------------
 
 
 def test_recent_returns_full_json(store: EventStore) -> None:
@@ -131,7 +131,7 @@ def test_agents_seen(store: EventStore) -> None:
     assert store.agents_seen() == ["claude-code", "cursor"]
 
 
-# ── Outbox / cloud queuing ───────────────────────────────────────────────────
+# -- Outbox / cloud queuing ---------------------------------------------------
 
 
 def test_outbox_is_empty_when_not_queued(store: EventStore) -> None:
@@ -180,7 +180,7 @@ def test_outbox_ack_empty_is_noop(store: EventStore) -> None:
     store.outbox_fail([], "x")
 
 
-# ── Stats ────────────────────────────────────────────────────────────────────
+# -- Stats --------------------------------------------------------------------
 
 
 def test_timeline_stats_basic(store: EventStore) -> None:
@@ -220,7 +220,7 @@ def test_timeline_stats_with_since_filter(store: EventStore) -> None:
     assert stats.total_events == 1
 
 
-# ── Parser helper ────────────────────────────────────────────────────────────
+# -- Parser helper ------------------------------------------------------------
 
 
 def test_parse_epoch_ms_handles_z_suffix() -> None:

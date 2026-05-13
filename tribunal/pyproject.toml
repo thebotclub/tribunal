@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tribunal"
-version = "3.0.0"
-description = "Quality gates for AI-generated code — TDD enforcement, secret scanning, and audit trails for coding agents."
+version = "3.0.1"
+description = "Quality gates for AI-generated code -- TDD enforcement, secret scanning, and audit trails for coding agents."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"

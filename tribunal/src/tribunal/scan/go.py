@@ -1,4 +1,4 @@
-"""Go file checker — runs go vet and golangci-lint for quality gates.
+"""Go file checker -- runs go vet and golangci-lint for quality gates.
 
 Detects issues via go vet and optional golangci-lint.
 Skips test files (*_test.go) by default.

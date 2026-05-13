@@ -54,7 +54,7 @@ rules:
         - "**/alembic/versions/**"
     action: warn
     message: |
-      Database migration touched. Review carefully — these typically
+      Database migration touched. Review carefully -- these typically
       need code review and a deploy window.
 
   - id: prod/deny-direct-sql-drop

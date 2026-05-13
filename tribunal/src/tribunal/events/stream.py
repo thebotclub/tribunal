@@ -93,10 +93,10 @@ class CloudStreamer:
             self._thread.join(timeout=timeout)
             self._thread = None
 
-    # ── Main loop ────────────────────────────────────────────────────────
+    # -- Main loop --------------------------------------------------------
 
     def _run(self) -> None:
-        log.info("CloudStreamer started → %s", self.url)
+        log.info("CloudStreamer started -> %s", self.url)
         while not self._stop.is_set():
             try:
                 drained = self._drain_once()
@@ -119,7 +119,7 @@ class CloudStreamer:
         self._backoff = min(max(self._backoff, 1.0) * 2.0, self.max_backoff_sec)
         return self._backoff * (0.5 + random.random())  # jitter
 
-    # ── One upload attempt ───────────────────────────────────────────────
+    # -- One upload attempt -----------------------------------------------
 
     def _drain_once(self) -> int:
         """Send up to ``batch_size`` events. Returns how many were acked."""

@@ -1,4 +1,4 @@
-"""Tests for tribunal.events.stream — batched cloud uploader."""
+"""Tests for tribunal.events.stream -- batched cloud uploader."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def _enqueue(store: EventStore, n: int = 1) -> list[dict]:
     return events
 
 
-# ── Configuration & lifecycle ────────────────────────────────────────────────
+# -- Configuration & lifecycle ------------------------------------------------
 
 
 def test_streamer_disabled_without_url_and_token(store: EventStore) -> None:
@@ -68,7 +68,7 @@ def test_start_noop_when_disabled(store: EventStore) -> None:
     assert s._thread is None
 
 
-# ── Drain semantics ──────────────────────────────────────────────────────────
+# -- Drain semantics ----------------------------------------------------------
 
 
 def test_drain_returns_zero_when_outbox_empty(store: EventStore) -> None:
@@ -111,7 +111,7 @@ def test_drain_permanent_error_drops_batch(store: EventStore) -> None:
     with patch.object(s, "_post", side_effect=_PermanentError("400 bad")):
         n = s._drain_once()
     assert n == 0
-    # 4xx → permanent → events dropped from outbox so we don't retry forever
+    # 4xx -> permanent -> events dropped from outbox so we don't retry forever
     assert store.outbox_depth() == 0
 
 
@@ -133,7 +133,7 @@ def test_drain_transient_error_records_failure(store: EventStore) -> None:
         assert row["last_error"] == "boom"
 
 
-# ── HTTP wire format ─────────────────────────────────────────────────────────
+# -- HTTP wire format ---------------------------------------------------------
 
 
 def test_post_serialises_bearer_and_path(store: EventStore) -> None:
@@ -181,7 +181,7 @@ def test_post_retryable_codes_propagate(store: EventStore, code: int) -> None:
             s._post({"events": []})
 
 
-# ── Backoff ──────────────────────────────────────────────────────────────────
+# -- Backoff ------------------------------------------------------------------
 
 
 def test_next_backoff_grows_and_caps(store: EventStore) -> None:

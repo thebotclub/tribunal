@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: Security review checklist for code changes — secrets, injection, access control.
+description: Security review checklist for code changes -- secrets, injection, access control.
 tags:
   - security
   - review

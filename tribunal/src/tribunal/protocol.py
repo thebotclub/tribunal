@@ -45,7 +45,7 @@ class HookEvent:
 
 @dataclass
 class HookVerdict:
-    """Result of evaluating a hook — tells Claude Code what to do."""
+    """Result of evaluating a hook -- tells Claude Code what to do."""
 
     allow: bool = True
     reason: str = ""

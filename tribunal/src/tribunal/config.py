@@ -1,7 +1,7 @@
-"""Config cascade — multi-level configuration resolution.
+"""Config cascade -- multi-level configuration resolution.
 
 Resolves Tribunal settings by merging configs from multiple levels,
-matching Claude Code's managed → enterprise → user → project cascade.
+matching Claude Code's managed -> enterprise -> user -> project cascade.
 
 Resolution order (later overrides earlier):
 1. Built-in defaults
@@ -21,7 +21,7 @@ from typing import Any, TypedDict
 import yaml
 
 
-# ── TypedDict definitions for config schema ────────────────────────────────────
+# -- TypedDict definitions for config schema ------------------------------------
 
 
 class BudgetConfig(TypedDict, total=False):
@@ -122,7 +122,7 @@ def _load_yaml_config(path: Path) -> dict[str, Any]:
         return {}
 
 
-# ── Config Schema Validation ──────────────────────────────────────────────────
+# -- Config Schema Validation --------------------------------------------------
 
 # Known top-level keys and their expected types
 _KNOWN_KEYS: dict[str, type | tuple[type, ...]] = {
@@ -283,7 +283,7 @@ def _apply_env(config: TribunalConfig) -> TribunalConfig:
 def resolve_config(cwd: str | None = None) -> TribunalConfig:
     """Resolve the full config cascade for the given project directory.
 
-    Cascade order: defaults → user → project → environment
+    Cascade order: defaults -> user -> project -> environment
     """
     import copy
 
@@ -325,7 +325,7 @@ def is_feature_enabled(name: str, cwd: str | None = None) -> bool:
 
 def format_config(config: TribunalConfig) -> str:
     """Format resolved config for display."""
-    lines = ["\n  ⚖  Tribunal Configuration\n"]
+    lines = ["\n  [T]  Tribunal Configuration\n"]
 
     lines.append("  Budget:")
     if config.budget_session_usd > 0:
@@ -346,7 +346,7 @@ def format_config(config: TribunalConfig) -> str:
     if config.features:
         lines.append("\n  Features:")
         for name, enabled in sorted(config.features.items()):
-            icon = "✓" if enabled else "✗"
+            icon = "[ok]" if enabled else "[x]"
             lines.append(f"    {icon} {name}")
 
     lines.append("")

@@ -7,9 +7,9 @@ and consumed by third-party adapters.
 This module:
 
 1. Loads and caches the schema as a Python dict.
-2. Exposes ``new_event(...)`` — a small helper that fills the required
+2. Exposes ``new_event(...)`` -- a small helper that fills the required
    fields and returns a dict ready to be serialised.
-3. Exposes ``validate_event(event)`` — wraps the optional ``jsonschema``
+3. Exposes ``validate_event(event)`` -- wraps the optional ``jsonschema``
    dependency. If the dependency is missing we fall back to a much
    smaller hand-rolled check so the CLI still runs.
 
@@ -51,10 +51,10 @@ def _spec_path() -> Path:
     here = Path(__file__).resolve()
     candidates = [
         # source checkout: tribunal/src/tribunal/events/schema.py
-        #   parents[3] = tribunal/  →  tribunal/spec/event-schema-v1.json
+        #   parents[3] = tribunal/  ->  tribunal/spec/event-schema-v1.json
         here.parents[3] / "spec" / "event-schema-v1.json",
         # installed wheel: site-packages/tribunal/events/schema.py
-        #   parents[1] = site-packages/tribunal/  →  tribunal/spec/...
+        #   parents[1] = site-packages/tribunal/  ->  tribunal/spec/...
         here.parents[1] / "spec" / "event-schema-v1.json",
     ]
     for candidate in candidates:
@@ -119,7 +119,7 @@ def new_event(
     Required fields get sensible defaults: a fresh UUID for ``event_id`` and
     an ISO-8601 UTC timestamp for ``ts`` if not provided.
 
-    The result is NOT validated automatically — call ``validate_event``
+    The result is NOT validated automatically -- call ``validate_event``
     yourself when you want to assert conformance. Adapters typically
     validate in dev and skip validation in hot paths.
     """
@@ -140,7 +140,7 @@ def new_event(
         "event_type": event_type,
         "payload": dict(payload) if payload is not None else {},
     }
-    # Optional fields — included only when set, to keep the on-the-wire
+    # Optional fields -- included only when set, to keep the on-the-wire
     # representation tight.
     if machine_id is not None:
         event["machine_id"] = machine_id

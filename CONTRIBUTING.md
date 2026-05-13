@@ -21,7 +21,7 @@ ruff check --fix src/ tests/ # auto-fix lint
   Sweep, etc.), open an issue and we'll guide you through wiring it up.
 - **Policy rules library.** YAML policy snippets that solve real problems
   (no-secrets-in-prompts, redact-PII, deny-prod-writes-without-approval, etc.)
-- **Docs improvements** — especially examples and screenshots.
+- **Docs improvements** -- especially examples and screenshots.
 - **Bug reports** with a minimal reproduction.
 
 ## PR checklist

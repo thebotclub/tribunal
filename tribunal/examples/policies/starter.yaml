@@ -1,4 +1,4 @@
-# Starter policy pack — sensible defaults for any team.
+# Starter policy pack -- sensible defaults for any team.
 #
 # Drop this in ~/.tribunal/policies/ and run:
 #   tribunal policy enable starter
@@ -8,12 +8,12 @@
 
 name: starter
 version: "1.0.0"
-description: Sensible defaults — block secret writes, warn on sudo, ask before pushing.
+description: Sensible defaults -- block secret writes, warn on sudo, ask before pushing.
 
 rules:
   - id: no-env-write
     effect: deny
-    message: "Refusing to modify .env — secrets belong in 1Password / Secret Manager."
+    message: "Refusing to modify .env -- secrets belong in 1Password / Secret Manager."
     match:
       event_type: tool.proposed
       tool_name: [edit_file, write_file, str_replace_editor]
@@ -37,7 +37,7 @@ rules:
 
   - id: ask-before-rm-rf
     effect: ask
-    message: "Destructive recursive delete — confirm the target."
+    message: "Destructive recursive delete -- confirm the target."
     match:
       event_type: tool.proposed
       tool_name: Bash

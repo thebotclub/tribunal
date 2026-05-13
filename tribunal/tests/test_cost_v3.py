@@ -1,4 +1,4 @@
-"""Tests for tribunal.cost (v3 — cross-agent, event-store driven)."""
+"""Tests for tribunal.cost (v3 -- cross-agent, event-store driven)."""
 
 from __future__ import annotations
 
@@ -50,7 +50,7 @@ def _cost_event(
     )
 
 
-# ── aggregate() ──────────────────────────────────────────────────────────────
+# -- aggregate() --------------------------------------------------------------
 
 
 def test_aggregate_sums_across_agents(store: EventStore) -> None:
@@ -108,7 +108,7 @@ def test_aggregate_time_window(store: EventStore) -> None:
     assert win.total_usd == pytest.approx(2.0)
 
 
-# ── session_spend / hourly_buckets ───────────────────────────────────────────
+# -- session_spend / hourly_buckets -------------------------------------------
 
 
 def test_session_spend_aggregates_one_session(store: EventStore) -> None:
@@ -133,7 +133,7 @@ def test_hourly_buckets_groups_correctly(store: EventStore) -> None:
     assert buckets[1]["total_usd"] == pytest.approx(0.50)
 
 
-# ── check_caps() ─────────────────────────────────────────────────────────────
+# -- check_caps() -------------------------------------------------------------
 
 
 def test_check_caps_allow_when_under_warn(store: EventStore) -> None:
@@ -208,7 +208,7 @@ def test_overrides_apply_per_user_repo(store: EventStore) -> None:
     assert d.action == "block"
 
 
-# ── Config IO ────────────────────────────────────────────────────────────────
+# -- Config IO ----------------------------------------------------------------
 
 
 def test_load_caps_missing_file(tmp_path: Path) -> None:

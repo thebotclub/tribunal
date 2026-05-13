@@ -1,5 +1,5 @@
 /**
- * Status bar — shows rule count and last audit event at a glance.
+ * Status bar -- shows rule count and last audit event at a glance.
  */
 
 import * as vscode from "vscode";
@@ -50,7 +50,7 @@ export class TribunalStatus implements vscode.Disposable {
 
     this.statusItem.text = `$(law) ${ruleCount} rules`;
     if (blocked > 0) {
-      this.statusItem.text += ` · ${blocked} blocked`;
+      this.statusItem.text += ` * ${blocked} blocked`;
     }
     this.statusItem.tooltip = `Tribunal: ${ruleCount} rules active, ${blocked} events blocked`;
   }

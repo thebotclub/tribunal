@@ -2,14 +2,14 @@
 
 This is the single most important credibility test in the v3 pivot. A
 governance tool that silently allows operations on error (fail-open) is
-worse than no governance tool at all — it produces a fake audit trail.
+worse than no governance tool at all -- it produces a fake audit trail.
 
 The contract these tests lock in:
 
 1. By default, ANY unexpected error in the gate exits with code 2 (BLOCK).
 2. The fail mode is configurable via TRIBUNAL_FAIL_MODE:
-     - unset / "closed" / anything-not-"open"  → exit 2 (block)
-     - "open"                                  → exit 0 (allow)
+     - unset / "closed" / anything-not-"open"  -> exit 2 (block)
+     - "open"                                  -> exit 0 (allow)
 3. The error is always surfaced to stderr (never silently swallowed).
 4. Errors are recorded to the audit trail so operators can see them.
 
@@ -26,7 +26,7 @@ from unittest.mock import patch
 import pytest
 
 
-# ── Exit-code helper contract ────────────────────────────────────────────────
+# -- Exit-code helper contract ------------------------------------------------
 
 
 class TestFailExitCode:
@@ -70,7 +70,7 @@ class TestFailExitCode:
                 )
 
 
-# ── End-to-end main() behaviour ──────────────────────────────────────────────
+# -- End-to-end main() behaviour ----------------------------------------------
 
 
 class TestGateMainFailsClosed:
@@ -191,7 +191,7 @@ class TestGateMainFailsClosed:
         assert exc.value.code == 0
 
 
-# ── Documentation contract ───────────────────────────────────────────────────
+# -- Documentation contract ---------------------------------------------------
 
 
 class TestGateModuleContract:

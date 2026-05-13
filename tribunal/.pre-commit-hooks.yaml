@@ -1,6 +1,6 @@
 - id: tribunal-ci
   name: Tribunal CI
-  description: "Quality gates for AI-generated code — secret scanning, TDD enforcement, linting"
+  description: "Quality gates for AI-generated code -- secret scanning, TDD enforcement, linting"
   entry: tribunal ci
   language: python
   types_or: [python, ts, tsx, javascript, jsx, go]

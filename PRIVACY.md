@@ -2,7 +2,7 @@
 
 Tribunal is an open-source wrapper around [Claude Code](https://github.com/anthropics/claude-code) that enforces TDD, quality gates, and team standards. This document explains every outbound network connection the tool makes, why, and how to disable what you don't want.
 
-> **TL;DR** — Tribunal itself sends **zero** telemetry. All outbound traffic originates from Anthropic's Claude Code CLI, which tribunal wraps. You can disable all non-essential traffic with a single environment variable.
+> **TL;DR** -- Tribunal itself sends **zero** telemetry. All outbound traffic originates from Anthropic's Claude Code CLI, which tribunal wraps. You can disable all non-essential traffic with a single environment variable.
 
 ---
 
@@ -29,11 +29,11 @@ export CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1
 
 | Destination | Purpose | Data sent |
 |---|---|---|
-| `api.anthropic.com` — Claude API | Send prompts, receive responses | Your prompts and code context |
-| `api.anthropic.com` — OAuth | Authentication | OAuth tokens (no passwords) |
-| `api.anthropic.com` — Sessions | Session management for remote/bridge mode | Session IDs, messages |
+| `api.anthropic.com` -- Claude API | Send prompts, receive responses | Your prompts and code context |
+| `api.anthropic.com` -- OAuth | Authentication | OAuth tokens (no passwords) |
+| `api.anthropic.com` -- Sessions | Session management for remote/bridge mode | Session IDs, messages |
 
-These cannot be disabled — Claude Code needs them to function.
+These cannot be disabled -- Claude Code needs them to function.
 
 ### Non-essential telemetry (disabled by `DISABLE_TELEMETRY=1`)
 
@@ -72,12 +72,12 @@ OpenTelemetry tracing only activates when you set `OTEL_EXPORTER_OTLP_ENDPOINT`.
 
 Tribunal itself makes **no outbound network connections**. It operates entirely locally as a set of hooks and rules that intercept Claude Code's file-write and command-execution tool calls. Specifically:
 
-- **No phone-home** — Tribunal does not contact any server
-- **No telemetry** — Tribunal collects no usage data
-- **No analytics** — No third-party tracking scripts
-- **No update checks** — Tribunal does not check for updates over the network
+- **No phone-home** -- Tribunal does not contact any server
+- **No telemetry** -- Tribunal collects no usage data
+- **No analytics** -- No third-party tracking scripts
+- **No update checks** -- Tribunal does not check for updates over the network
 
-The tribunal.dev website fetches the GitHub star count from `api.github.com` for display purposes only — this is standard for open-source project pages and sends no user data.
+The tribunal.dev website fetches the GitHub star count from `api.github.com` for display purposes only -- this is standard for open-source project pages and sends no user data.
 
 ---
 
@@ -87,10 +87,10 @@ OpenClaw Doctor scans source code for outbound network endpoints and flags anyth
 
 However:
 
-1. **This is Anthropic's official code** — the same telemetry exists in every `@anthropic-ai/claude-code` installation from npm
-2. **It respects opt-out** — all telemetry can be disabled with environment variables
-3. **No code/prompts in telemetry** — analytics events contain only operational metrics (event names, error codes, platform info)
-4. **Tribunal adds nothing** — all flagged endpoints originate from upstream Claude Code
+1. **This is Anthropic's official code** -- the same telemetry exists in every `@anthropic-ai/claude-code` installation from npm
+2. **It respects opt-out** -- all telemetry can be disabled with environment variables
+3. **No code/prompts in telemetry** -- analytics events contain only operational metrics (event names, error codes, platform info)
+4. **Tribunal adds nothing** -- all flagged endpoints originate from upstream Claude Code
 
 ---
 

@@ -1,4 +1,4 @@
-"""Claude Code adapter — translate Anthropic's hook payloads to v1 events.
+"""Claude Code adapter -- translate Anthropic's hook payloads to v1 events.
 
 Claude Code calls registered hooks with a JSON payload on stdin and reads
 a single JSON response from stdout. The Tribunal hook script (``tribunal
@@ -10,9 +10,9 @@ Hook events we translate
 ------------------------
 
 Anthropic ships ~12 hook event types (UserPromptSubmit, PreToolUse,
-PostToolUse, Notification, Stop, SubagentStop, …). We map each to one or
+PostToolUse, Notification, Stop, SubagentStop, ...). We map each to one or
 more unified events. The full mapping table lives in the v3 execution
-plan §2.1; this module is the executable form of it.
+plan Sec.2.1; this module is the executable form of it.
 
 Design rules
 ------------
@@ -41,7 +41,7 @@ AGENT_ID = "claude-code"
 Emit = Callable[[dict[str, Any]], None]
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 
 def _machine_id() -> str:
@@ -83,11 +83,11 @@ def _common_fields(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-# ── Per-hook translators ─────────────────────────────────────────────────────
+# -- Per-hook translators -----------------------------------------------------
 
 
 def on_session_start(payload: Mapping[str, Any], emit: Emit) -> None:
-    """Claude Code SessionStart hook → ``session.start`` event."""
+    """Claude Code SessionStart hook -> ``session.start`` event."""
     ev = new_event(
         event_type="session.start",
         payload={
@@ -100,7 +100,7 @@ def on_session_start(payload: Mapping[str, Any], emit: Emit) -> None:
 
 
 def on_session_stop(payload: Mapping[str, Any], emit: Emit) -> None:
-    """SessionEnd / Stop hook → ``session.end`` event."""
+    """SessionEnd / Stop hook -> ``session.end`` event."""
     ev = new_event(
         event_type="session.end",
         payload={
@@ -113,7 +113,7 @@ def on_session_stop(payload: Mapping[str, Any], emit: Emit) -> None:
 
 
 def on_user_prompt(payload: Mapping[str, Any], emit: Emit) -> None:
-    """UserPromptSubmit hook → ``prompt.submitted`` event."""
+    """UserPromptSubmit hook -> ``prompt.submitted`` event."""
     prompt_text = payload.get("prompt") or payload.get("user_prompt") or ""
     ev = new_event(
         event_type="prompt.submitted",
@@ -127,7 +127,7 @@ def on_user_prompt(payload: Mapping[str, Any], emit: Emit) -> None:
 
 
 def on_pre_tool_use(payload: Mapping[str, Any], emit: Emit) -> None:
-    """PreToolUse hook → ``tool.proposed`` event.
+    """PreToolUse hook -> ``tool.proposed`` event.
 
     Special-cases ``Bash``, ``Read``, ``Write``, ``Edit``, ``WebFetch``,
     ``mcp__*`` so the daemon's policy engine has structured details.
@@ -157,7 +157,7 @@ def on_pre_tool_use(payload: Mapping[str, Any], emit: Emit) -> None:
 
 
 def on_post_tool_use(payload: Mapping[str, Any], emit: Emit) -> None:
-    """PostToolUse hook → ``tool.executed`` or ``tool.failed`` event."""
+    """PostToolUse hook -> ``tool.executed`` or ``tool.failed`` event."""
     success = bool(payload.get("success", True))
     event_type = "tool.executed" if success else "tool.failed"
 
@@ -214,7 +214,7 @@ def on_post_tool_use(payload: Mapping[str, Any], emit: Emit) -> None:
 
 
 def on_subagent_start(payload: Mapping[str, Any], emit: Emit) -> None:
-    """SubagentStart → ``subagent.start`` event."""
+    """SubagentStart -> ``subagent.start`` event."""
     emit(
         new_event(
             event_type="subagent.start",
@@ -274,7 +274,7 @@ def on_mcp_call(payload: Mapping[str, Any], emit: Emit) -> None:
     )
 
 
-# ── Dispatcher ───────────────────────────────────────────────────────────────
+# -- Dispatcher ---------------------------------------------------------------
 
 
 HOOK_MAP: dict[str, Callable[[Mapping[str, Any], Emit], None]] = {
@@ -302,7 +302,7 @@ def translate(payload: Mapping[str, Any], emit: Emit) -> int:
     name = payload.get("hook_event_name") or payload.get("event") or ""
     handler = HOOK_MAP.get(name)
     if handler is None:
-        # Unknown hook → emit a generic event so we never lose signal.
+        # Unknown hook -> emit a generic event so we never lose signal.
         emit(
             new_event(
                 event_type="error.gate",

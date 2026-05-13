@@ -1,4 +1,4 @@
-"""Audit logger — records all tool executions for compliance.
+"""Audit logger -- records all tool executions for compliance.
 
 Features:
 - JSONL append-only audit trail
@@ -34,7 +34,7 @@ def rotate_audit_log(
     except OSError:
         return False
 
-    # Shift existing rotated files: .5 → delete, .4 → .5, .3 → .4, etc.
+    # Shift existing rotated files: .5 -> delete, .4 -> .5, .3 -> .4, etc.
     for i in range(keep, 0, -1):
         src = audit_path.with_suffix(f".{i}.jsonl")
         if i == keep:
@@ -98,7 +98,7 @@ def log_event(event: HookEvent, verdict_allow: bool, rule_name: str = "") -> Non
     # For Bash, log the command (truncated)
     if event.tool_name == "Bash" and "command" in event.tool_input:
         cmd = event.tool_input["command"]
-        entry["command"] = cmd[:200] + ("…" if len(cmd) > 200 else "")
+        entry["command"] = cmd[:200] + ("..." if len(cmd) > 200 else "")
 
     with open(log_file, "a") as f:
         f.write(json.dumps(entry, separators=(",", ":")) + "\n")

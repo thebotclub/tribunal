@@ -1,4 +1,4 @@
-"""Slack webhook notifier — fire on policy.block and cost-cap breaches.
+"""Slack webhook notifier -- fire on policy.block and cost-cap breaches.
 
 Reads ``TRIBUNAL_SLACK_WEBHOOK`` from the env. When unset the notifier
 is a no-op so the import is free for OSS users with no Slack workspace.
@@ -56,7 +56,7 @@ class SlackNotifier:
     def enabled(self) -> bool:
         return bool(self.webhook_url)
 
-    # ── Public entry points ─────────────────────────────────────────────
+    # -- Public entry points ---------------------------------------------
 
     def notify_policy_decision(
         self, event: Mapping[str, Any], decision: Mapping[str, Any]
@@ -67,7 +67,7 @@ class SlackNotifier:
         self._enqueue(
             _PendingAlert(
                 severity="block" if action == "deny" else "ask",
-                title=f"Tribunal policy {action.upper()} — {decision.get('rule_id') or 'rule'}",
+                title=f"Tribunal policy {action.upper()} -- {decision.get('rule_id') or 'rule'}",
                 detail=str(decision.get("message") or ""),
                 rule_id=str(decision.get("rule_id") or ""),
                 pack=str(decision.get("pack") or ""),
@@ -105,7 +105,7 @@ class SlackNotifier:
         self._enqueue(
             _PendingAlert(
                 severity="cost",
-                title=f"Tribunal cost cap breach — {window}",
+                title=f"Tribunal cost cap breach -- {window}",
                 detail=(
                     f"${spent_usd:,.2f} spent against ${cap_usd:,.2f} cap "
                     f"({(spent_usd / cap_usd * 100):.0f}%)."
@@ -115,7 +115,7 @@ class SlackNotifier:
             )
         )
 
-    # ── Lifecycle ───────────────────────────────────────────────────────
+    # -- Lifecycle -------------------------------------------------------
 
     def start(self) -> None:
         if not self.enabled or self._thread is not None:
@@ -132,14 +132,14 @@ class SlackNotifier:
             self._thread = None
         self.flush()
 
-    # ── Internals ───────────────────────────────────────────────────────
+    # -- Internals -------------------------------------------------------
 
     def _enqueue(self, alert: _PendingAlert) -> None:
         if not self.enabled:
             return
         with self._lock:
             if len(self._queue) >= self.max_queue:
-                # Drop oldest — alerts are notifications, not audit trail.
+                # Drop oldest -- alerts are notifications, not audit trail.
                 self._queue.pop(0)
             self._queue.append(alert)
 
@@ -157,7 +157,7 @@ class SlackNotifier:
             self._queue.clear()
         try:
             self._post(self._render(batch))
-        except Exception:  # noqa: BLE001 — never let Slack break ingestion
+        except Exception:  # noqa: BLE001 -- never let Slack break ingestion
             log.exception("slack webhook post failed; dropping %d alert(s)", len(batch))
 
     def _render(self, batch: list[_PendingAlert]) -> dict:
@@ -169,7 +169,7 @@ class SlackNotifier:
         inj_count = sum(1 for a in batch if a.severity == "injection")
         cost_count = sum(1 for a in batch if a.severity == "cost")
         headline = (
-            f":shield: Tribunal — {block_count} block(s), {ask_count} ask(s), "
+            f":shield: Tribunal -- {block_count} block(s), {ask_count} ask(s), "
             f"{inj_count} injection alert(s), {cost_count} cost breach(es)."
         )
         blocks.append({"type": "section", "text": {"type": "mrkdwn", "text": headline}})
@@ -194,7 +194,7 @@ class SlackNotifier:
             if alert.rule_id:
                 meta_parts.append(f"rule `{alert.rule_id}`")
             if meta_parts:
-                lines.append("· ".join(meta_parts))
+                lines.append("* ".join(meta_parts))
             blocks.append(
                 {
                     "type": "section",
@@ -208,7 +208,7 @@ class SlackNotifier:
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"_+{len(batch) - 10} more alert(s)…_",
+                            "text": f"_+{len(batch) - 10} more alert(s)..._",
                         }
                     ],
                 }

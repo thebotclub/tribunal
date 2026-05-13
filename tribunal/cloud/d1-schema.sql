@@ -1,4 +1,4 @@
--- Tribunal cloud — D1 schema
+-- Tribunal cloud -- D1 schema
 --
 -- D1 charges per row scanned, so we keep this schema deliberately tiny:
 -- only the summary rows that the dashboard *needs* to filter and group on.
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS ingestion_tokens (
 CREATE INDEX IF NOT EXISTS ingestion_tokens_hash_idx ON ingestion_tokens(token_hash);
 CREATE INDEX IF NOT EXISTS ingestion_tokens_org_idx ON ingestion_tokens(org_id);
 
--- One row per event we accept. Payload is NOT stored here — keep this
+-- One row per event we accept. Payload is NOT stored here -- keep this
 -- table narrow so D1 scans are cheap. Use `r2_object_key` to fetch the
 -- full event from R2 when needed.
 CREATE TABLE IF NOT EXISTS event_summary (
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS event_summary (
     r2_object_key TEXT NOT NULL                 -- full event location in R2
 );
 
--- Queries we expect — every dashboard view should hit at least one index:
+-- Queries we expect -- every dashboard view should hit at least one index:
 CREATE INDEX IF NOT EXISTS event_org_time_idx
     ON event_summary(org_id, epoch_ms DESC);
 CREATE INDEX IF NOT EXISTS event_session_idx

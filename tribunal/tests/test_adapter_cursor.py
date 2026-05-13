@@ -1,4 +1,4 @@
-"""Tests for tribunal.adapters.cursor — Cursor IDE event translator."""
+"""Tests for tribunal.adapters.cursor -- Cursor IDE event translator."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _base(**kw: Any) -> dict:
     return p
 
 
-# ── Lifecycle ───────────────────────────────────────────────────────────────
+# -- Lifecycle ---------------------------------------------------------------
 
 
 def test_chat_open_emits_session_start() -> None:
@@ -48,7 +48,7 @@ def test_chat_close_emits_session_end() -> None:
     assert events[0]["payload"]["turns"] == 3
 
 
-# ── Prompts and tools ───────────────────────────────────────────────────────
+# -- Prompts and tools -------------------------------------------------------
 
 
 def test_user_message_emits_prompt_submitted() -> None:
@@ -129,7 +129,7 @@ def test_tool_result_shell_emits_bash_executed() -> None:
     assert events[1]["payload"]["exit_code"] == 0
 
 
-# ── File save / cost ────────────────────────────────────────────────────────
+# -- File save / cost --------------------------------------------------------
 
 
 def test_file_save_emits_file_write() -> None:
@@ -165,7 +165,7 @@ def test_cost_event() -> None:
     assert ev["cost"]["model"] == "gpt-4o"
 
 
-# ── Dispatcher ──────────────────────────────────────────────────────────────
+# -- Dispatcher --------------------------------------------------------------
 
 
 def test_translate_dispatches_known_type() -> None:

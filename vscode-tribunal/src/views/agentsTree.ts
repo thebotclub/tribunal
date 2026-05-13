@@ -1,5 +1,5 @@
 /**
- * Agents TreeView — displays active and completed agents from .tribunal/state.json.
+ * Agents TreeView -- displays active and completed agents from .tribunal/state.json.
  */
 
 import * as vscode from "vscode";
@@ -45,9 +45,9 @@ export class AgentsTreeProvider implements vscode.TreeDataProvider<AgentItem> {
       const active = state.active_agents || {};
       for (const [id, info] of Object.entries(active) as [string, AgentState][]) {
         items.push(new AgentItem(
-          `🟢 ${id}`,
+          ` ${id}`,
           "play",
-          `${info.agent_type || "agent"} — $${(info.cost_usd || 0).toFixed(4)}`,
+          `${info.agent_type || "agent"} -- $${(info.cost_usd || 0).toFixed(4)}`,
           `Started: ${info.started_at || "?"}\nTools: ${info.tool_calls || 0}`,
         ));
       }
@@ -56,10 +56,10 @@ export class AgentsTreeProvider implements vscode.TreeDataProvider<AgentItem> {
       const completed = (state.completed_agents || []).slice(-5);
       for (const info of completed as AgentState[]) {
         items.push(new AgentItem(
-          `⚫ ${info.agent_id || "agent"}`,
+          ` ${info.agent_id || "agent"}`,
           "circle-slash",
           `$${(info.cost_usd || 0).toFixed(4)}`,
-          `${info.started_at || ""} → ${info.stopped_at || ""}`,
+          `${info.started_at || ""} -> ${info.stopped_at || ""}`,
         ));
       }
 

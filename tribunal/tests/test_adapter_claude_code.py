@@ -1,4 +1,4 @@
-"""Tests for tribunal.adapters.claude_code — Claude Code hook translator."""
+"""Tests for tribunal.adapters.claude_code -- Claude Code hook translator."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _base_payload(**kw: Any) -> dict:
     return p
 
 
-# ── session lifecycle ───────────────────────────────────────────────────────
+# -- session lifecycle -------------------------------------------------------
 
 
 def test_session_start_produces_one_validated_event() -> None:
@@ -51,7 +51,7 @@ def test_session_stop_includes_reason() -> None:
     assert events[0]["payload"]["turns"] == 4
 
 
-# ── prompts & tools ─────────────────────────────────────────────────────────
+# -- prompts & tools ---------------------------------------------------------
 
 
 def test_user_prompt_captures_text_and_length() -> None:
@@ -147,7 +147,7 @@ def test_read_tool_emits_file_read() -> None:
     assert types == ["tool.executed", "file.read"]
 
 
-# ── subagents, cost, mcp ────────────────────────────────────────────────────
+# -- subagents, cost, mcp ----------------------------------------------------
 
 
 def test_subagent_start_and_stop() -> None:
@@ -190,7 +190,7 @@ def test_mcp_call_emits_before() -> None:
     assert events[0]["payload"]["server"] == "filesystem"
 
 
-# ── Dispatcher ──────────────────────────────────────────────────────────────
+# -- Dispatcher --------------------------------------------------------------
 
 
 def test_translate_known_hook_returns_count() -> None:

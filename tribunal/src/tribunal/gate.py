@@ -1,4 +1,4 @@
-"""tribunal-gate — Claude Code hook handler entry point.
+"""tribunal-gate -- Claude Code hook handler entry point.
 
 This is called by Claude Code via the hooks system. It reads a hook event
 from stdin, evaluates project rules, logs the result, and exits with the
@@ -25,8 +25,8 @@ from .rules import RuleEngine
 def _fail_exit_code() -> int:
     """Return the exit code for error conditions based on fail mode policy.
 
-    closed (default) → exit 2 (block)
-    open → exit 0 (allow)
+    closed (default) -> exit 2 (block)
+    open -> exit 0 (allow)
     """
     mode = os.environ.get("TRIBUNAL_FAIL_MODE", "closed").lower()
     return 0 if mode == "open" else 2

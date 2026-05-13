@@ -27,9 +27,9 @@ tribunal init
 
 This creates:
 
-- `.tribunal/rules.yaml` — your governance rules
-- `.tribunal/config.yaml` — Tribunal configuration
-- `.claude/claudeconfig.json` — Claude Code hook registration when hook enforcement is used
+- `.tribunal/rules.yaml` -- your governance rules
+- `.tribunal/config.yaml` -- Tribunal configuration
+- `.claude/claudeconfig.json` -- Claude Code hook registration when hook enforcement is used
 
 ## Install a Rule Pack
 

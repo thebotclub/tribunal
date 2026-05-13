@@ -1,5 +1,5 @@
 /**
- * Rules TreeView — displays .tribunal/rules.yaml rules in the sidebar.
+ * Rules TreeView -- displays .tribunal/rules.yaml rules in the sidebar.
  */
 
 import * as vscode from "vscode";
@@ -33,7 +33,7 @@ export class RulesTreeProvider implements vscode.TreeDataProvider<RuleItem> {
   getChildren(): RuleItem[] {
     const rulesPath = path.join(this.workspaceRoot, ".tribunal", "rules.yaml");
     if (!fs.existsSync(rulesPath)) {
-      return [new RuleItem("No rules.yaml found — run: tribunal init", "", "", false)];
+      return [new RuleItem("No rules.yaml found -- run: tribunal init", "", "", false)];
     }
 
     try {
@@ -59,7 +59,7 @@ export class RulesTreeProvider implements vscode.TreeDataProvider<RuleItem> {
   }
 
   private parseRulesYaml(content: string): Record<string, RuleDef> {
-    // Minimal YAML parser for rules section — works for standard tribunal configs
+    // Minimal YAML parser for rules section -- works for standard tribunal configs
     const rules: Record<string, RuleDef> = {};
     let inRules = false;
     let currentRule = "";

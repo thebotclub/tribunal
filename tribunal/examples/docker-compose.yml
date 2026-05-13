@@ -5,7 +5,7 @@
 # Starts the daemon on :8088 backed by Postgres. Mount your own
 # policy packs into /policies and they will be auto-loaded.
 #
-# This stack is the same code that powers the hosted SaaS — MIT licensed.
+# This stack is the same code that powers the hosted SaaS -- MIT licensed.
 
 services:
   postgres:

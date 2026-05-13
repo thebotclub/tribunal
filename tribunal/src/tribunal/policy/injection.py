@@ -1,4 +1,4 @@
-"""Prompt-injection detector — pure heuristics, no model calls.
+"""Prompt-injection detector -- pure heuristics, no model calls.
 
 Real prompt injection defense needs an LLM, but ~80% of the obvious
 public cases use the same handful of patterns: "ignore previous
@@ -6,7 +6,7 @@ instructions", suspicious markdown comment payloads, hidden Unicode
 characters that re-write the prompt, etc. We catch those statically and
 emit an ``injection.suspected`` event the policy engine can act on.
 
-False-positive rate is moderate — the design point is "warn the user,
+False-positive rate is moderate -- the design point is "warn the user,
 don't block silently". The dashboard surfaces these so a reviewer can
 confirm/dismiss.
 """
@@ -30,7 +30,7 @@ class InjectionFinding:
     snippet: str = ""
 
 
-# ── Rule definitions ─────────────────────────────────────────────────────────
+# -- Rule definitions ---------------------------------------------------------
 
 # Each rule: (id, severity, message, compiled_regex_or_predicate)
 _RULES: list[tuple[str, str, str, re.Pattern[str]]] = [
@@ -86,7 +86,7 @@ _RULES: list[tuple[str, str, str, re.Pattern[str]]] = [
     (
         "injection/base64-payload",
         "low",
-        "Suspicious base64 blob — common exfiltration container.",
+        "Suspicious base64 blob -- common exfiltration container.",
         re.compile(r"(?:[A-Za-z0-9+/]{120,}={0,2})"),
     ),
 ]
@@ -107,7 +107,7 @@ _BIDI_CHARS = frozenset(
 )
 
 
-# ── Public API ──────────────────────────────────────────────────────────────
+# -- Public API --------------------------------------------------------------
 
 
 def scan(text: str) -> InjectionFinding:
@@ -142,7 +142,7 @@ def scan(text: str) -> InjectionFinding:
             snippet=text[:200],
         )
 
-    # Regex rules — first by severity (high before low), first match wins.
+    # Regex rules -- first by severity (high before low), first match wins.
     severity_order = {"high": 3, "medium": 2, "low": 1}
     rules_sorted = sorted(_RULES, key=lambda r: -severity_order[r[1]])
     for rule_id, severity, message, pattern in rules_sorted:
@@ -163,9 +163,9 @@ def scan_event(event: Mapping[str, object]) -> InjectionFinding:
     """Run :func:`scan` over the user-controlled bits of a unified event.
 
     Currently checks:
-      - prompt.submitted        → payload.prompt
-      - tool.proposed (Bash)    → payload.command
-      - tool.executed (Read)    → payload.tool_response (when string)
+      - prompt.submitted        -> payload.prompt
+      - tool.proposed (Bash)    -> payload.command
+      - tool.executed (Read)    -> payload.tool_response (when string)
 
     The intent is "things the agent saw that could carry injection".
     """
@@ -203,7 +203,7 @@ def scan_event(event: Mapping[str, object]) -> InjectionFinding:
     return InjectionFinding(suspected=False)
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 
 def _snippet(text: str, idx: int, width: int = 80) -> str:

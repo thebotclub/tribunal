@@ -1,4 +1,4 @@
-"""GitHub Copilot CLI adapter — translate Copilot CLI events to v1 events.
+"""GitHub Copilot CLI adapter -- translate Copilot CLI events to v1 events.
 
 GitHub Copilot CLI (``gh copilot``) doesn't expose a hook API yet, so
 Tribunal taps it via a thin wrapper script (``gh-copilot-tribunal``)
@@ -69,7 +69,7 @@ def _common(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-# ── Translators ─────────────────────────────────────────────────────────────
+# -- Translators -------------------------------------------------------------
 
 
 def on_session_start(payload: Mapping[str, Any], emit: Emit) -> None:
@@ -100,7 +100,7 @@ def on_session_end(payload: Mapping[str, Any], emit: Emit) -> None:
 
 
 def on_turn_complete(payload: Mapping[str, Any], emit: Emit) -> None:
-    """A complete Copilot CLI turn — fans out to 3-4 events."""
+    """A complete Copilot CLI turn -- fans out to 3-4 events."""
     common = _common(payload)
     prompt = payload.get("prompt") or payload.get("command") or ""
     suggestion = payload.get("suggestion") or ""
@@ -157,7 +157,7 @@ def on_turn_complete(payload: Mapping[str, Any], emit: Emit) -> None:
         )
 
 
-# ── Dispatcher ──────────────────────────────────────────────────────────────
+# -- Dispatcher --------------------------------------------------------------
 
 
 TYPE_MAP: dict[str, Callable[[Mapping[str, Any], Emit], None]] = {

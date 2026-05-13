@@ -1,6 +1,6 @@
 {
   "name": "tribunal-vscode",
-  "displayName": "Tribunal — Claude Code Governance",
+  "displayName": "Tribunal -- Claude Code Governance",
   "description": "VS Code extension for Tribunal: real-time rule status, audit viewer, cost tracking, and team dashboard for Claude Code governance.",
   "version": "0.1.0",
   "publisher": "thebotclub",

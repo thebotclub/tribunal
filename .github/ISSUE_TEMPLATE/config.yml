@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security issue
+    url: https://github.com/thebotclub/tribunal/security/advisories/new
+    about: Please report security vulnerabilities privately, not as public issues.
+  - name: Hosted dashboard support
+    url: mailto:hello@tribunal.dev
+    about: Questions about the paid app.tribunal.dev service.

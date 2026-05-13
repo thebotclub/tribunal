@@ -1,36 +1,36 @@
 # Tribunal Cloud
 
 Cloudflare-native deployment that powers the hosted Team and Compliance
-tiers. Self-hosters can ignore this directory entirely — the OSS
+tiers. Self-hosters can ignore this directory entirely -- the OSS
 daemon stands alone.
 
 ## Architecture
 
 ```
-agent daemon  ──HTTPS──▶  workers/ingest  ─┬─▶  R2  (raw JSONL.gz events)
-                                            └─▶  D1  (event_summary row)
-                                            └─▶  Queue  ──▶  workers/aggregate
-                                                              ├─▶ D1.cost_hourly
-                                                              └─▶ D1.sessions
+agent daemon  ??HTTPS???  workers/ingest  ????  R2  (raw JSONL.gz events)
+                                            ???  D1  (event_summary row)
+                                            ???  Queue  ???  workers/aggregate
+                                                              ??? D1.cost_hourly
+                                                              ??? D1.sessions
 
-Next.js dashboard  ──D1 read──▶  Pages   (auth via Cloudflare Access / NextAuth)
+Next.js dashboard  ??D1 read???  Pages   (auth via Cloudflare Access / NextAuth)
 ```
 
 ## Storage layout
 
 - **R2** holds the canonical event log:
   `{org_id}/{YYYY}/{MM}/{DD}/{HH}/{session_id}/{event_id}.json`.
-  This is the *only* copy of payloads — D1 stays summary-only so per-row
+  This is the *only* copy of payloads -- D1 stays summary-only so per-row
   scan costs stay bounded.
 
 - **D1** is the queryable index:
-  - `event_summary` — one row per accepted event, narrow columns,
+  - `event_summary` -- one row per accepted event, narrow columns,
     multi-column indices on `(org, epoch_ms)`, `(org, agent, epoch_ms)`,
     `(org, event_type, epoch_ms)`, `(org, policy_decision, epoch_ms)`,
     `(org, user, epoch_ms)`, `(session_id)`.
-  - `cost_hourly` — pre-aggregated cost rollups updated by the queue
+  - `cost_hourly` -- pre-aggregated cost rollups updated by the queue
     consumer. Dashboard cost pages read here, never `event_summary`.
-  - `sessions` — per-session totals, also maintained by the aggregator.
+  - `sessions` -- per-session totals, also maintained by the aggregator.
 
 ## Deploy
 
@@ -66,7 +66,7 @@ For a 50-developer team generating ~1M events/month:
 | Queues           | $0.40                    |
 | **Total**        | **~$3.60 / team / month**|
 
-At $19/seat × 50 seats = $950/mo billed; infra is <0.4%.
+At $19/seat ? 50 seats = $950/mo billed; infra is <0.4%.
 
 ## Reading data back
 

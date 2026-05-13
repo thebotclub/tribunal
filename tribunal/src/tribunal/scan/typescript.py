@@ -1,4 +1,4 @@
-"""TypeScript/JavaScript checker — runs eslint and tsc for quality gates.
+"""TypeScript/JavaScript checker -- runs eslint and tsc for quality gates.
 
 Detects lint errors via eslint and type errors via tsc.
 Skips test files (*.test.ts, *.spec.ts, etc.) by default.

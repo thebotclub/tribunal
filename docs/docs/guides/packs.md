@@ -6,10 +6,10 @@ Pre-built governance rule sets for common compliance and workflow patterns.
 
 | Pack | Description | Rules |
 |------|-------------|-------|
-| `soc2` | SOC 2 compliance — TDD, secret detection, audit logging | 4 |
-| `startup` | Fast-moving teams — TDD + cost limits | 3 |
-| `enterprise` | Full governance — all rules + multi-agent | 4 |
-| `security` | Security-focused — secrets, TDD, type safety | 3 |
+| `soc2` | SOC 2 compliance -- TDD, secret detection, audit logging | 4 |
+| `startup` | Fast-moving teams -- TDD + cost limits | 3 |
+| `enterprise` | Full governance -- all rules + multi-agent | 4 |
+| `security` | Security-focused -- secrets, TDD, type safety | 3 |
 
 ## CLI Usage
 

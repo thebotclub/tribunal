@@ -1,4 +1,4 @@
-"""Tests for tribunal.events.schema — the v3 unified event helpers.
+"""Tests for tribunal.events.schema -- the v3 unified event helpers.
 
 These tests assert the things adapter authors will actually rely on:
 
@@ -29,7 +29,7 @@ from tribunal.events.schema import (
 )
 
 
-# ── Schema loading ───────────────────────────────────────────────────────────
+# -- Schema loading -----------------------------------------------------------
 
 
 class TestSchemaShape:
@@ -41,7 +41,7 @@ class TestSchemaShape:
     def test_required_fields_match_module_constant(self):
         schema = load_schema()
         required = set(schema["required"])
-        # schema_version is added by this module — must be in required too
+        # schema_version is added by this module -- must be in required too
         assert "schema_version" in required
         assert "event_id" in required
         assert "event_type" in required
@@ -66,7 +66,7 @@ class TestSchemaShape:
             assert not errs, f"example {name} failed: {errs[0].message if errs else ''}"
 
 
-# ── new_event() ──────────────────────────────────────────────────────────────
+# -- new_event() --------------------------------------------------------------
 
 
 class TestNewEvent:
@@ -115,7 +115,7 @@ class TestNewEvent:
         assert ev["tags"] == {"team": "platform"}
 
 
-# ── validate_event() ─────────────────────────────────────────────────────────
+# -- validate_event() ---------------------------------------------------------
 
 
 def _good_event() -> dict:
@@ -175,7 +175,7 @@ class TestValidateEventMinimalFallback:
             _validate_event_minimal(bad)
 
 
-# ── Module export sanity ─────────────────────────────────────────────────────
+# -- Module export sanity -----------------------------------------------------
 
 
 class TestExports:

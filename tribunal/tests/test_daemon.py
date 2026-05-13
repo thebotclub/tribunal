@@ -1,4 +1,4 @@
-"""Tests for tribunal.daemon — FastAPI ingestion endpoints."""
+"""Tests for tribunal.daemon -- FastAPI ingestion endpoints."""
 
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def _ev(**kw) -> dict:
     )
 
 
-# ── Health ──────────────────────────────────────────────────────────────────
+# -- Health ------------------------------------------------------------------
 
 
 def test_health_exposes_versions_and_counts(client: TestClient) -> None:
@@ -52,7 +52,7 @@ def test_health_exposes_versions_and_counts(client: TestClient) -> None:
     assert body["events"] == 0
 
 
-# ── Event ingestion ─────────────────────────────────────────────────────────
+# -- Event ingestion ---------------------------------------------------------
 
 
 def test_post_events_accepts_valid_batch(client: TestClient) -> None:
@@ -91,7 +91,7 @@ def test_post_event_400_on_invalid(client: TestClient) -> None:
     assert r.status_code == 400
 
 
-# ── Reads ───────────────────────────────────────────────────────────────────
+# -- Reads -------------------------------------------------------------------
 
 
 def test_list_events_round_trip(client: TestClient) -> None:
@@ -167,7 +167,7 @@ def test_dashboard_serves_html(client: TestClient) -> None:
     assert "/v1/events" in r.text
 
 
-# ── Auth ────────────────────────────────────────────────────────────────────
+# -- Auth --------------------------------------------------------------------
 
 
 def test_auth_token_enforced(store: EventStore) -> None:
@@ -199,7 +199,7 @@ def test_health_does_not_require_auth(store: EventStore) -> None:
     assert r.status_code == 200
 
 
-# ── Policy + Injection wiring ─────────────────────────────────────────────
+# -- Policy + Injection wiring ---------------------------------------------
 
 
 def test_post_event_emits_injection_synthetic(
@@ -222,7 +222,7 @@ def test_post_event_emits_injection_synthetic(
 def test_post_event_policy_block_decision_returned(
     client: TestClient, store: EventStore
 ) -> None:
-    # file.write to .env → secrets-readonly deny
+    # file.write to .env -> secrets-readonly deny
     ev = _ev(event_type="file.write", payload={"path": "/repo/.env"})
     r = client.post("/v1/event", json=ev)
     assert r.status_code == 200

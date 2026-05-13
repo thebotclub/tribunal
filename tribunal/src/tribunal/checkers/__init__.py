@@ -1,4 +1,4 @@
-"""Back-compat shim — :mod:`tribunal.checkers` was renamed to :mod:`tribunal.scan` in v3.0.0a1.
+"""Back-compat shim -- :mod:`tribunal.checkers` was renamed to :mod:`tribunal.scan` in v3.0.0a1.
 
 External users importing ``from tribunal.checkers import ...`` keep working;
 internal code should import from ``tribunal.scan``.
@@ -13,7 +13,7 @@ import importlib
 import sys
 import warnings
 
-from tribunal.scan import (  # noqa: F401 — re-export
+from tribunal.scan import (  # noqa: F401 -- re-export
     CheckResult,
     CheckerFunc,
     Finding,

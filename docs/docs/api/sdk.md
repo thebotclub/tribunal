@@ -24,7 +24,7 @@ Evaluate a simulated event against all active rules.
 result = sdk.evaluate("PreToolUse", tool_name="Bash", tool_input={"command": "rm -rf /"})
 result.allowed   # bool
 result.blocked   # bool
-result.message   # str — combined reason messages
+result.message   # str -- combined reason messages
 result.messages  # list[str]
 ```
 

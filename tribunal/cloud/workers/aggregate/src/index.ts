@@ -1,5 +1,5 @@
 /**
- * tribunal-aggregate — queue consumer
+ * tribunal-aggregate -- queue consumer
  *
  * Reads QueueMessage batches from the tribunal-events queue and
  * incrementally maintains two derived tables in D1:
@@ -47,7 +47,7 @@ export default {
     for (const msg of batch.messages) {
       const m = msg.body;
 
-      // ── cost_hourly ──
+      // -- cost_hourly --
       if (m.cost_usd > 0 || m.input_tokens || m.output_tokens) {
         const hour = Math.floor(m.epoch_ms / HOUR_MS) * HOUR_MS;
         const key = [
@@ -73,7 +73,7 @@ export default {
         costBuckets.set(key, bucket);
       }
 
-      // ── sessions ──
+      // -- sessions --
       const sess = sessionUpdates.get(m.session_id) ?? {
         id: m.session_id,
         org_id: m.org_id,

@@ -13,8 +13,8 @@
 //      we exec it directly.
 //   2. Otherwise we try to bootstrap Tribunal using the user's existing
 //      Python toolchain in this preference order:
-//        a) `pipx install tribunal==3.0.0` — recommended, isolates deps.
-//        b) `python3 -m pip install --user tribunal==3.0.0` — fallback.
+//        a) `pipx install tribunal==3.0.0` -- recommended, isolates deps.
+//        b) `python3 -m pip install --user tribunal==3.0.0` -- fallback.
 //      Then we exec the freshly installed CLI.
 //
 // We never sudo, never modify system Python, and never silently install
@@ -34,7 +34,7 @@ const HELP_URL = "https://tribunal.dev";
 const PIP_HELP = "https://pip.pypa.io/en/stable/installation/";
 
 function which(cmd) {
-  // Cross-platform `which` — returns null if not found.
+  // Cross-platform `which` -- returns null if not found.
   const isWin = process.platform === "win32";
   const lookup = isWin ? "where" : "which";
   try {
@@ -68,7 +68,7 @@ function bootstrap() {
 
   const pipx = which("pipx");
   if (pipx) {
-    logInfo(`bootstrapping with pipx → ${VERSION_SPEC} (first run only)`);
+    logInfo(`bootstrapping with pipx -> ${VERSION_SPEC} (first run only)`);
     const r = spawnSync(pipx, ["install", VERSION_SPEC], { stdio: "inherit" });
     if (r.status === 0) return true;
     logInfo("pipx install failed, falling back to pip");

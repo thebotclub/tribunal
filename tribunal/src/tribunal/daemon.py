@@ -1,17 +1,17 @@
-"""Tribunal local daemon — FastAPI app served on http://127.0.0.1:8088.
+"""Tribunal local daemon -- FastAPI app served on http://127.0.0.1:8088.
 
 Endpoints
 ---------
 
-  - ``POST /v1/events``    — adapters submit normalised events here.
+  - ``POST /v1/events``    -- adapters submit normalised events here.
                               Body: ``{"events": [<event>, ...]}``.
                               Returns ``{"accepted": N, "rejected": M}``.
-  - ``POST /v1/event``     — single-event convenience wrapper.
-  - ``GET  /v1/events``    — recent events (newest first), with filters.
-  - ``GET  /v1/stats``     — :class:`TimelineStats` for the dashboard.
-  - ``GET  /v1/cost``      — aggregate spend over a window.
-  - ``GET  /v1/health``    — liveness probe (no auth).
-  - ``GET  /``             — minimal HTML dashboard.
+  - ``POST /v1/event``     -- single-event convenience wrapper.
+  - ``GET  /v1/events``    -- recent events (newest first), with filters.
+  - ``GET  /v1/stats``     -- :class:`TimelineStats` for the dashboard.
+  - ``GET  /v1/cost``      -- aggregate spend over a window.
+  - ``GET  /v1/health``    -- liveness probe (no auth).
+  - ``GET  /``             -- minimal HTML dashboard.
 
 Authentication
 --------------
@@ -49,7 +49,7 @@ DEFAULT_PORT = 8088
 DEFAULT_HOST = "127.0.0.1"
 
 
-# ── App factory ──────────────────────────────────────────────────────────────
+# -- App factory --------------------------------------------------------------
 
 
 def create_app(
@@ -107,7 +107,7 @@ def create_app(
         lifespan=_lifespan,
     )
 
-    # ── Auth dependency ──────────────────────────────────────────────────
+    # -- Auth dependency --------------------------------------------------
 
     def require_auth(authorization: str = Header(default="")) -> None:
         if not auth_token:
@@ -117,7 +117,7 @@ def create_app(
         if authorization[len("Bearer ") :] != auth_token:
             raise HTTPException(status_code=403, detail="invalid token")
 
-    # ── Health ───────────────────────────────────────────────────────────
+    # -- Health -----------------------------------------------------------
 
     @app.get("/v1/health")
     def health() -> dict:
@@ -129,13 +129,13 @@ def create_app(
             "cloud_enabled": streamer.enabled,
         }
 
-    # ── Event ingestion ──────────────────────────────────────────────────
+    # -- Event ingestion --------------------------------------------------
 
     def _process_event(ev: dict) -> tuple[bool, Optional[Decision], Optional[dict]]:
         """Insert ev, run injection + policy, emit derived events.
 
         Returns (inserted_ok, decision, injection_finding_dict). On schema
-        error the caller is responsible for raising — this helper does NOT
+        error the caller is responsible for raising -- this helper does NOT
         catch it.
         """
         store.insert(ev, queue_for_cloud=streamer.enabled)
@@ -176,7 +176,7 @@ def create_app(
             decision = evaluate_policy(ev, packs)
             if decision.action != "allow":
                 pol_event_type = f"policy.{decision.action if decision.action != 'deny' else 'block'}"
-                # Schema only defines policy.{block, ask, allow}; warn → block channel? No:
+                # Schema only defines policy.{block, ask, allow}; warn -> block channel? No:
                 # we emit warn as policy.allow with policy_decision metadata to keep
                 # the event_type set compact. Block/ask are first-class.
                 if decision.action == "warn":
@@ -277,7 +277,7 @@ def create_app(
             "injection": injection,
         }
 
-    # ── Reads ────────────────────────────────────────────────────────────
+    # -- Reads ------------------------------------------------------------
 
     @app.get("/v1/events")
     def list_events(
@@ -336,7 +336,7 @@ def create_app(
             "event_count": win.event_count,
         }
 
-    # ── Dashboard HTML ───────────────────────────────────────────────────
+    # -- Dashboard HTML ---------------------------------------------------
 
     @app.get("/", response_class=HTMLResponse)
     def dashboard() -> str:
@@ -345,7 +345,7 @@ def create_app(
     return app
 
 
-# ── Minimal dashboard ────────────────────────────────────────────────────────
+# -- Minimal dashboard --------------------------------------------------------
 
 
 def _dashboard_html() -> str:
@@ -353,7 +353,7 @@ def _dashboard_html() -> str:
     return """<!doctype html>
 <html><head>
 <meta charset="utf-8">
-<title>Tribunal — local audit log</title>
+<title>Tribunal -- local audit log</title>
 <style>
   :root { color-scheme: dark light; }
   body { font: 14px/1.5 -apple-system, "SF Pro Text", system-ui, sans-serif;
@@ -375,12 +375,12 @@ def _dashboard_html() -> str:
   .stat b { font-size: 1.3rem; font-variant-numeric: tabular-nums; }
 </style></head>
 <body>
-<h1>Tribunal — local audit log</h1>
+<h1>Tribunal -- local audit log</h1>
 <div class="meta">One unified timeline across every coding agent on this machine.
-  <a href="/v1/health">/v1/health</a> ·
-  <a href="/v1/events">/v1/events</a> ·
+  <a href="/v1/health">/v1/health</a> *
+  <a href="/v1/events">/v1/events</a> *
   <a href="/v1/stats">/v1/stats</a></div>
-<div id="stats" class="meta">loading…</div>
+<div id="stats" class="meta">loading...</div>
 <table id="events">
   <thead><tr><th>time</th><th>agent</th><th>type</th><th>session</th><th>summary</th></tr></thead>
   <tbody></tbody>
@@ -417,7 +417,7 @@ setInterval(refresh, 4000);
 </body></html>"""
 
 
-# ── Process entrypoint ───────────────────────────────────────────────────────
+# -- Process entrypoint -------------------------------------------------------
 
 
 def serve(

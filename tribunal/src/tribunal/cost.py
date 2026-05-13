@@ -1,7 +1,7 @@
 """Cross-agent cost aggregation and cap enforcement.
 
 This is the v3 rewrite of the legacy ``cost`` module. The v2 cost module
-read ``.tribunal/state.json`` (a Claude-Code–specific file) directly. The
+read ``.tribunal/state.json`` (a Claude-Code-specific file) directly. The
 v3 module reads from the unified :class:`tribunal.events.store.EventStore`
 so it works across every adapter (Claude Code, Cursor, Copilot, Codex,
 custom).
@@ -40,7 +40,7 @@ from typing import Any, Optional
 
 from tribunal.events.store import EventStore
 
-# ── Public data classes ──────────────────────────────────────────────────────
+# -- Public data classes ------------------------------------------------------
 
 
 @dataclass
@@ -76,9 +76,9 @@ class CapDecision:
     """Result of evaluating spend against caps.
 
     ``action`` is one of:
-      - ``"allow"``  → under the soft warn threshold
-      - ``"warn"``   → between soft and hard cap; surface but do not block
-      - ``"block"``  → hard cap exceeded; policy engine should block
+      - ``"allow"``  -> under the soft warn threshold
+      - ``"warn"``   -> between soft and hard cap; surface but do not block
+      - ``"block"``  -> hard cap exceeded; policy engine should block
     """
 
     action: str
@@ -89,7 +89,7 @@ class CapDecision:
     message: str = ""
 
 
-# ── Aggregation queries ──────────────────────────────────────────────────────
+# -- Aggregation queries ------------------------------------------------------
 
 
 def aggregate(
@@ -120,7 +120,7 @@ def aggregate(
         args.append(agent)
     sql_where = " WHERE " + " AND ".join(where)
 
-    with store._lock:  # noqa: SLF001 — we own the store
+    with store._lock:  # noqa: SLF001 -- we own the store
         conn: sqlite3.Connection = store._conn  # noqa: SLF001
         rows = conn.execute(
             f"""
@@ -179,7 +179,7 @@ def hourly_buckets(
 ) -> list[dict[str, Any]]:
     """Per-hour ``(user, repo, agent)`` totals for dashboard sparklines.
 
-    Returns a list of dicts sorted oldest→newest::
+    Returns a list of dicts sorted oldest->newest::
 
         [{"hour_epoch_ms": 1717..., "user_id": "u1", "repo_path": "...",
           "agent": "cursor", "total_usd": 0.42, "events": 5}, ...]
@@ -225,7 +225,7 @@ def hourly_buckets(
     ]
 
 
-# ── Cap evaluation ───────────────────────────────────────────────────────────
+# -- Cap evaluation -----------------------------------------------------------
 
 
 def check_caps(
@@ -239,13 +239,13 @@ def check_caps(
 ) -> CapDecision:
     """Evaluate spend against every configured cap, return the most-severe.
 
-    Order of evaluation: session → day → week → month. We surface the
+    Order of evaluation: session -> day -> week -> month. We surface the
     *first* cap that's exceeded (block) or warning (warn). If none, allow.
     """
     now_ms = now_epoch_ms if now_epoch_ms is not None else _now_ms()
     effective = _apply_overrides(caps, user_id=user_id, repo_path=repo_path)
 
-    # ── session ──
+    # -- session --
     if effective.session_usd > 0 and session_id:
         spent = session_spend(store, session_id)
         decision = _evaluate(
@@ -257,7 +257,7 @@ def check_caps(
         if decision.action != "allow":
             return decision
 
-    # ── day / week / month ──
+    # -- day / week / month --
     for window_name, hours, cap_value in (
         ("day", 24, effective.daily_usd),
         ("week", 24 * 7, effective.weekly_usd),
@@ -298,7 +298,7 @@ def _evaluate(*, window: str, spent: float, cap: float, warn_at: float) -> CapDe
             fraction=fraction,
             message=(
                 f"{window.title()} spend ${spent:.2f} has reached the "
-                f"${cap:.2f} cap — blocking further LLM calls."
+                f"${cap:.2f} cap -- blocking further LLM calls."
             ),
         )
     if fraction >= warn_at:
@@ -345,7 +345,7 @@ def _apply_overrides(
     return caps
 
 
-# ── Config IO ────────────────────────────────────────────────────────────────
+# -- Config IO ----------------------------------------------------------------
 
 
 def default_caps_path() -> Path:
@@ -416,7 +416,7 @@ def save_caps(caps: CostCaps, path: Optional[Path] = None) -> None:
     tmp.replace(path)
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 
 def _now_ms() -> int:

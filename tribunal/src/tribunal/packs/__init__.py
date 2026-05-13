@@ -1,4 +1,4 @@
-"""Rule Packs — curated rule bundles for common compliance and workflow needs.
+"""Rule Packs -- curated rule bundles for common compliance and workflow needs.
 
 Each pack is a YAML bundle that can be installed with:
     tribunal pack install <name>
@@ -17,13 +17,13 @@ from typing import Any
 
 import yaml
 
-# ── Built-in packs ────────────────────────────────────────────────────────────
+# -- Built-in packs ------------------------------------------------------------
 
 _PACKS: dict[str, dict[str, Any]] = {
     "soc2": {
         "name": "tribunal-soc2",
         "version": "1.0.0",
-        "description": "SOC 2 compliance rules — audit all tool calls, block secrets, restrict file system access.",
+        "description": "SOC 2 compliance rules -- audit all tool calls, block secrets, restrict file system access.",
         "rules": {
             "audit-all-tools": {
                 "trigger": "PostToolUse",
@@ -62,7 +62,7 @@ _PACKS: dict[str, dict[str, Any]] = {
     "startup": {
         "name": "tribunal-startup",
         "version": "1.0.0",
-        "description": "Lightweight startup defaults — TDD enforcement, secret scanning, reasonable cost limits.",
+        "description": "Lightweight startup defaults -- TDD enforcement, secret scanning, reasonable cost limits.",
         "rules": {
             "tdd-python": {
                 "trigger": "PreToolUse",
@@ -93,7 +93,7 @@ _PACKS: dict[str, dict[str, Any]] = {
     "enterprise": {
         "name": "tribunal-enterprise",
         "version": "1.0.0",
-        "description": "Full enterprise governance — all rules, review agents, managed policies, memory injection.",
+        "description": "Full enterprise governance -- all rules, review agents, managed policies, memory injection.",
         "rules": {
             "tdd-python": {
                 "trigger": "PreToolUse",
@@ -146,7 +146,7 @@ _PACKS: dict[str, dict[str, Any]] = {
     "security": {
         "name": "tribunal-security",
         "version": "1.0.0",
-        "description": "Security-focused rules — secret scanning, dependency audit, code review enforcement.",
+        "description": "Security-focused rules -- secret scanning, dependency audit, code review enforcement.",
         "rules": {
             "no-secrets": {
                 "trigger": "PreToolUse",
@@ -246,10 +246,10 @@ def install_pack(name: str, cwd: str, merge: bool = True) -> tuple[bool, list[st
 
 def format_packs() -> str:
     """Format available packs for CLI display."""
-    lines = ["\n  ⚖  Tribunal Rule Packs\n"]
+    lines = ["\n  [T]  Tribunal Rule Packs\n"]
     for name, pack in _PACKS.items():
         rule_count = len(pack.get("rules", {}))
-        lines.append(f"  📦 {name} ({rule_count} rules)")
+        lines.append(f"  [pkg] {name} ({rule_count} rules)")
         lines.append(f"     {pack['description']}")
         lines.append("")
     lines.append("  Install with: tribunal pack install <name>")

@@ -1,5 +1,5 @@
 name: "Tribunal CI"
-description: "Quality gates for AI-generated code — secret scanning, TDD enforcement, linting"
+description: "Quality gates for AI-generated code -- secret scanning, TDD enforcement, linting"
 author: "thebotclub"
 
 branding:

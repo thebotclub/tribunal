@@ -1,4 +1,4 @@
-"""Policy engine — evaluate unified events against YAML rule packs.
+"""Policy engine -- evaluate unified events against YAML rule packs.
 
 A policy pack is a YAML document::
 
@@ -19,22 +19,22 @@ Match grammar
 Each rule has a ``when`` block of *predicates* that all must match for
 the rule to fire (logical AND). Supported predicates:
 
-  - ``event_type``        — exact event_type, or list of types
-  - ``agent``             — exact agent id, or list
-  - ``tool_name``         — for tool.* events; exact match or list
-  - ``path_match``        — fnmatch globs against payload.path or
+  - ``event_type``        -- exact event_type, or list of types
+  - ``agent``             -- exact agent id, or list
+  - ``tool_name``         -- for tool.* events; exact match or list
+  - ``path_match``        -- fnmatch globs against payload.path or
                             tool_input.file_path
-  - ``command_match``     — regex against payload.command (bash)
-  - ``payload_regex``     — {field: pattern} regex map
-  - ``cost_gte``          — float, matches cost.usd >= value
+  - ``command_match``     -- regex against payload.command (bash)
+  - ``payload_regex``     -- {field: pattern} regex map
+  - ``cost_gte``          -- float, matches cost.usd >= value
 
 Action types
 ------------
 
-  - ``allow`` — explicit pass; useful for overriding broader denies
-  - ``warn``  — log + show in UI but don't block
-  - ``ask``   — surface to the user (interactive agent)
-  - ``deny``  — hard block
+  - ``allow`` -- explicit pass; useful for overriding broader denies
+  - ``warn``  -- log + show in UI but don't block
+  - ``ask``   -- surface to the user (interactive agent)
+  - ``deny``  -- hard block
 
 When multiple rules match the same event, ``deny`` wins, then ``ask``,
 then ``warn``, then ``allow``.
@@ -58,7 +58,7 @@ except ImportError:  # pragma: no cover
     _yaml = None  # type: ignore[assignment]
 
 
-# ── Public data ──────────────────────────────────────────────────────────────
+# -- Public data --------------------------------------------------------------
 
 
 ACTION_PRIORITY = {"deny": 4, "ask": 3, "warn": 2, "allow": 1}
@@ -104,7 +104,7 @@ class Decision:
         return self.action != "allow"
 
 
-# ── Pack loading ─────────────────────────────────────────────────────────────
+# -- Pack loading -------------------------------------------------------------
 
 
 def load_pack(source: Path | str | Mapping[str, Any]) -> PolicyPack:
@@ -155,7 +155,7 @@ def load_shipped_packs() -> list[PolicyPack]:
     return packs
 
 
-# ── Evaluation ───────────────────────────────────────────────────────────────
+# -- Evaluation ---------------------------------------------------------------
 
 
 def evaluate(event: Mapping[str, Any], packs: Sequence[PolicyPack]) -> Decision:
@@ -178,7 +178,7 @@ def evaluate(event: Mapping[str, Any], packs: Sequence[PolicyPack]) -> Decision:
     )
 
 
-# ── Predicates ───────────────────────────────────────────────────────────────
+# -- Predicates ---------------------------------------------------------------
 
 
 def _matches(event: Mapping[str, Any], when: Mapping[str, Any]) -> bool:

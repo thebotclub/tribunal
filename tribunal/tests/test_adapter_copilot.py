@@ -1,4 +1,4 @@
-"""Tests for tribunal.adapters.copilot — GitHub Copilot CLI translator."""
+"""Tests for tribunal.adapters.copilot -- GitHub Copilot CLI translator."""
 
 from __future__ import annotations
 

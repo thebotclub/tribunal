@@ -1,4 +1,4 @@
-"""Tests for hooks.py — lifecycle event handlers (P7 hook expansion)."""
+"""Tests for hooks.py -- lifecycle event handlers (P7 hook expansion)."""
 
 from __future__ import annotations
 

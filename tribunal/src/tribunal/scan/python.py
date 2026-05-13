@@ -1,4 +1,4 @@
-"""Python file checker — runs ruff and basedpyright/mypy for quality gates.
+"""Python file checker -- runs ruff and basedpyright/mypy for quality gates.
 
 Detects lint errors and type errors in Python source files.
 Skips test files (test_*.py, *_test.py) by default.

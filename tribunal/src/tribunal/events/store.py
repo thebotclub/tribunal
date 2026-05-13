@@ -1,4 +1,4 @@
-"""Local event store — SQLite-backed queue for the Tribunal daemon.
+"""Local event store -- SQLite-backed queue for the Tribunal daemon.
 
 Every event the daemon receives goes through this module:
 
@@ -77,7 +77,7 @@ _MIGRATIONS: dict[int, str] = {
 }
 
 
-# ── DB plumbing ──────────────────────────────────────────────────────────────
+# -- DB plumbing --------------------------------------------------------------
 
 
 def _default_db_path() -> Path:
@@ -132,7 +132,7 @@ class EventStore:
                 cur.execute("ROLLBACK")
                 raise
 
-    # ── Writes ───────────────────────────────────────────────────────────
+    # -- Writes -----------------------------------------------------------
 
     def insert(
         self, event: Mapping[str, Any], *, queue_for_cloud: bool = False
@@ -193,13 +193,13 @@ class EventStore:
                 self.insert(ev, queue_for_cloud=queue_for_cloud)
                 count += 1
             except SchemaError:
-                # Skip invalid events but don't abort the batch — adapters
+                # Skip invalid events but don't abort the batch -- adapters
                 # may produce one bad event in a hundred and we want the
                 # rest persisted.
                 continue
         return count
 
-    # ── Reads ────────────────────────────────────────────────────────────
+    # -- Reads ------------------------------------------------------------
 
     def recent(
         self,
@@ -239,7 +239,7 @@ class EventStore:
                 )
             ]
 
-    # ── Outbox (for cloud streamer) ──────────────────────────────────────
+    # -- Outbox (for cloud streamer) --------------------------------------
 
     def outbox_pending(self, *, limit: int = 500) -> list[dict[str, Any]]:
         with self._lock:
@@ -314,7 +314,7 @@ class EventStore:
             return self._conn.execute("SELECT COUNT(*) FROM outbox").fetchone()[0]
 
 
-# ── Stats helpers ────────────────────────────────────────────────────────────
+# -- Stats helpers ------------------------------------------------------------
 
 
 @dataclass
@@ -377,7 +377,7 @@ def timeline_stats(
     )
 
 
-# ── Utilities ────────────────────────────────────────────────────────────────
+# -- Utilities ----------------------------------------------------------------
 
 
 def _parse_epoch_ms(ts: str) -> int:

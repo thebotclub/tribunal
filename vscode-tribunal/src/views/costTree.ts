@@ -1,5 +1,5 @@
 /**
- * Cost TreeView — displays cost and budget info from .tribunal/state.json.
+ * Cost TreeView -- displays cost and budget info from .tribunal/state.json.
  */
 
 import * as vscode from "vscode";

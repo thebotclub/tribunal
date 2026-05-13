@@ -1,9 +1,9 @@
-"""TDD enforcement checker — verifies test files exist for source files.
+"""TDD enforcement checker -- verifies test files exist for source files.
 
 Checks that each source file has a corresponding test file:
-  - Python: src.py → test_src.py or src_test.py
-  - TypeScript: src.ts → src.test.ts or src.spec.ts
-  - Go: src.go → src_test.go
+  - Python: src.py -> test_src.py or src_test.py
+  - TypeScript: src.ts -> src.test.ts or src.spec.ts
+  - Go: src.go -> src_test.go
 
 Also builds a reverse dependency graph for Python to find affected tests.
 """
@@ -18,7 +18,7 @@ from . import CheckResult, Finding, register
 _SKIP_DIRS = {".venv", "venv", "node_modules", "__pycache__", ".git", "dist", "build"}
 
 
-# ── Test file detection ───────────────────────────────────────────────────────
+# -- Test file detection -------------------------------------------------------
 
 
 def _has_python_test(file_path: Path, project_root: Path) -> bool:
@@ -89,7 +89,7 @@ def _has_go_test(file_path: Path) -> bool:
     return test_file.is_file()
 
 
-# ── Python dependency graph ───────────────────────────────────────────────────
+# -- Python dependency graph ---------------------------------------------------
 
 
 def find_affected_tests(
@@ -183,7 +183,7 @@ def _parse_imports(file_path: Path) -> set[str]:
     return imports
 
 
-# ── Checker registration ──────────────────────────────────────────────────────
+# -- Checker registration ------------------------------------------------------
 
 
 @register([".py"])

@@ -4,13 +4,13 @@ Real-time governance dashboard for Claude Code sessions.
 
 ## Features
 
-- **Rules TreeView** — see all active rules from `.tribunal/rules.yaml`
-- **Audit Log TreeView** — browse recent audit entries with allow/block icons
-- **Agents TreeView** — track active and completed sub-agents
-- **Cost TreeView** — monitor session costs, budgets, tokens, and compactions
-- **Status Bar** — rule count and blocked event count at a glance
-- **Auto-refresh** — views update when `.tribunal/` files change
-- **Commands** — doctor, init, rotate, validate from the command palette
+- **Rules TreeView** -- see all active rules from `.tribunal/rules.yaml`
+- **Audit Log TreeView** -- browse recent audit entries with allow/block icons
+- **Agents TreeView** -- track active and completed sub-agents
+- **Cost TreeView** -- monitor session costs, budgets, tokens, and compactions
+- **Status Bar** -- rule count and blocked event count at a glance
+- **Auto-refresh** -- views update when `.tribunal/` files change
+- **Commands** -- doctor, init, rotate, validate from the command palette
 
 ## Installation
 

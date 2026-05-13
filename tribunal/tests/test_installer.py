@@ -1,4 +1,4 @@
-"""Tests for tribunal.installer — Claude Code / Cursor settings injection."""
+"""Tests for tribunal.installer -- Claude Code / Cursor settings injection."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from tribunal.installer import (
 )
 
 
-# ── Claude Code installer ───────────────────────────────────────────────────
+# -- Claude Code installer ---------------------------------------------------
 
 
 def test_install_into_empty_directory_creates_settings(tmp_path: Path) -> None:
@@ -113,7 +113,7 @@ def test_uninstall_removes_tribunal_hooks_only(tmp_path: Path) -> None:
     assert not any("tribunal" in c for c in remaining)
 
 
-# ── Cursor installer ────────────────────────────────────────────────────────
+# -- Cursor installer --------------------------------------------------------
 
 
 def test_install_cursor_writes_settings(tmp_path: Path) -> None:

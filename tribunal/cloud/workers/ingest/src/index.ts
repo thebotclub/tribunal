@@ -1,5 +1,5 @@
 /**
- * tribunal-ingest — Cloudflare Worker
+ * tribunal-ingest -- Cloudflare Worker
  *
  * Receives unified events from agent daemons on the customer's machines,
  * authenticates the ingestion token against D1, and writes:
@@ -83,7 +83,7 @@ export default {
       return new Response("not found", { status: 404 });
     }
 
-    // ── Auth ─────────────────────────────────────────────────────────
+    // -- Auth ---------------------------------------------------------
     const authz = request.headers.get("authorization") ?? "";
     if (!authz.startsWith("Bearer ")) {
       return json({ error: "missing bearer token" }, 401);
@@ -102,7 +102,7 @@ export default {
     const orgId = auth.org_id;
     const fallbackUserId = auth.user_id ?? "unknown";
 
-    // ── Parse body ───────────────────────────────────────────────────
+    // -- Parse body ---------------------------------------------------
     let body: unknown;
     try {
       body = await request.json();
@@ -118,7 +118,7 @@ export default {
       return json({ error: `too many events; max ${maxBatch}` }, 413);
     }
 
-    // ── Per-event processing ─────────────────────────────────────────
+    // -- Per-event processing -----------------------------------------
     const accepted: string[] = [];
     const rejected: Array<{ event_id: string; reason: string }> = [];
     const r2WritePromises: Promise<unknown>[] = [];
@@ -135,7 +135,7 @@ export default {
       const epochMs = isoToEpochMs(ev.ts);
       const r2Key = r2PartitionKey(orgId, ev.session_id, ev.event_id, epochMs);
 
-      // 1. R2 write — full JSONL line
+      // 1. R2 write -- full JSONL line
       r2WritePromises.push(
         env.EVENTS_BUCKET.put(r2Key, JSON.stringify(ev) + "\n", {
           httpMetadata: { contentType: "application/x-ndjson" },
@@ -229,7 +229,7 @@ export default {
 };
 
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// -- Helpers ----------------------------------------------------------------
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {

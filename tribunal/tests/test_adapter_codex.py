@@ -1,4 +1,4 @@
-"""Tests for tribunal.adapters.codex — OpenAI Codex CLI translator."""
+"""Tests for tribunal.adapters.codex -- OpenAI Codex CLI translator."""
 
 from __future__ import annotations
 

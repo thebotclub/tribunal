@@ -1,4 +1,4 @@
-"""Lifecycle hook handlers — process Claude Code hook event types.
+"""Lifecycle hook handlers -- process Claude Code hook event types.
 
 Provides handlers for each hook event type beyond the basic
 PreToolUse/PostToolUse rule evaluation. All handlers are self-contained
@@ -17,13 +17,13 @@ from .protocol import HookEvent, HookVerdict
 
 
 def handle_session_end(event: HookEvent) -> HookVerdict:
-    """Handle SessionEnd — log session completion."""
+    """Handle SessionEnd -- log session completion."""
     log_event(event, True, "session-end")
     return HookVerdict(allow=True, additional_context="Session ended.")
 
 
 def handle_post_tool_failure(event: HookEvent) -> HookVerdict:
-    """Handle PostToolUseFailure — track failure patterns per tool."""
+    """Handle PostToolUseFailure -- track failure patterns per tool."""
     cwd = event.cwd
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
@@ -43,20 +43,20 @@ def handle_post_tool_failure(event: HookEvent) -> HookVerdict:
     if count >= 3:
         return HookVerdict(
             allow=True,
-            additional_context=f"⚠️ {tool} has failed {count} times this session.",
+            additional_context=f"[!] {tool} has failed {count} times this session.",
         )
 
     return HookVerdict(allow=True)
 
 
 def handle_file_changed(event: HookEvent) -> HookVerdict:
-    """Handle FileChanged — log external file modifications."""
+    """Handle FileChanged -- log external file modifications."""
     log_event(event, True, "file-changed")
     return HookVerdict(allow=True)
 
 
 def handle_cwd_changed(event: HookEvent) -> HookVerdict:
-    """Handle CwdChanged — reload rules for new project context."""
+    """Handle CwdChanged -- reload rules for new project context."""
     log_event(event, True, "cwd-changed")
     return HookVerdict(
         allow=True,
@@ -65,16 +65,16 @@ def handle_cwd_changed(event: HookEvent) -> HookVerdict:
 
 
 def handle_config_change(event: HookEvent) -> HookVerdict:
-    """Handle ConfigChange — detect unauthorized config/permissions changes."""
+    """Handle ConfigChange -- detect unauthorized config/permissions changes."""
     log_event(event, True, "config-changed")
     return HookVerdict(
         allow=True,
-        additional_context="⚠️ Tribunal: configuration was modified mid-session.",
+        additional_context="[!] Tribunal: configuration was modified mid-session.",
     )
 
 
 def handle_permission_request(event: HookEvent) -> HookVerdict:
-    """Handle PermissionRequest — audit permission requests."""
+    """Handle PermissionRequest -- audit permission requests."""
     log_event(event, True, "permission-request")
 
     cwd = event.cwd
@@ -95,7 +95,7 @@ def handle_permission_request(event: HookEvent) -> HookVerdict:
 
 
 def handle_permission_denied(event: HookEvent) -> HookVerdict:
-    """Handle PermissionDenied — log denied permissions and detect escalation."""
+    """Handle PermissionDenied -- log denied permissions and detect escalation."""
     log_event(event, False, "permission-denied")
 
     cwd = event.cwd
@@ -133,7 +133,7 @@ def handle_permission_denied(event: HookEvent) -> HookVerdict:
 
 
 def handle_pre_compact(event: HookEvent) -> HookVerdict:
-    """Handle PreCompact — save critical state before context compaction."""
+    """Handle PreCompact -- save critical state before context compaction."""
     cwd = event.cwd
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
@@ -155,7 +155,7 @@ def handle_pre_compact(event: HookEvent) -> HookVerdict:
 
 
 def handle_post_compact(event: HookEvent) -> HookVerdict:
-    """Handle PostCompact — log compaction completion."""
+    """Handle PostCompact -- log compaction completion."""
     cwd = event.cwd
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
@@ -179,7 +179,7 @@ def handle_post_compact(event: HookEvent) -> HookVerdict:
 
 
 def handle_subagent_start(event: HookEvent) -> HookVerdict:
-    """Handle SubagentStart — track sub-agent lifecycle."""
+    """Handle SubagentStart -- track sub-agent lifecycle."""
     cwd = event.cwd
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
@@ -199,7 +199,7 @@ def handle_subagent_start(event: HookEvent) -> HookVerdict:
 
 
 def handle_subagent_stop(event: HookEvent) -> HookVerdict:
-    """Handle SubagentStop — finalize sub-agent tracking."""
+    """Handle SubagentStop -- finalize sub-agent tracking."""
     cwd = event.cwd
     state_path = Path(cwd) / ".tribunal" / "state.json"
     state = locked_read_json(state_path)
@@ -221,18 +221,18 @@ def handle_subagent_stop(event: HookEvent) -> HookVerdict:
 
 
 def handle_task_created(event: HookEvent) -> HookVerdict:
-    """Handle TaskCreated — track task lifecycle."""
+    """Handle TaskCreated -- track task lifecycle."""
     log_event(event, True, "task-created")
     return HookVerdict(allow=True)
 
 
 def handle_task_completed(event: HookEvent) -> HookVerdict:
-    """Handle TaskCompleted — track task completion."""
+    """Handle TaskCompleted -- track task completion."""
     log_event(event, True, "task-completed")
     return HookVerdict(allow=True)
 
 
-# ── Handler Registry ──────────────────────────────────────────────────────────
+# -- Handler Registry ----------------------------------------------------------
 
 LIFECYCLE_HANDLERS: dict[str, Any] = {
     "SessionEnd": handle_session_end,

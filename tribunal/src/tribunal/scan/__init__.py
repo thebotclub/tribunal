@@ -1,4 +1,4 @@
-"""Tribunal scan — language-aware quality gates for AI-generated code.
+"""Tribunal scan -- language-aware quality gates for AI-generated code.
 
 Relocated from ``tribunal.checkers`` in v3.0.0a1 (the v2 checkers became a
 ``tribunal scan`` subcommand once the headline product became governance).

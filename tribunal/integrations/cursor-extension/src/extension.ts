@@ -1,9 +1,9 @@
 /**
- * Tribunal for Cursor — VS Code / Cursor extension.
+ * Tribunal for Cursor -- VS Code / Cursor extension.
  *
  * Subscribes to the editor events Cursor surfaces and streams them to the
  * local Tribunal daemon. The extension does NOT implement policy or
- * blocking — those live in the daemon. Its only job is to faithfully
+ * blocking -- those live in the daemon. Its only job is to faithfully
  * report what Cursor is doing.
  *
  * The matching translator on the Python side is tribunal.adapters.cursor.
@@ -12,7 +12,7 @@
 
 import * as vscode from "vscode";
 
-// ── Config ──────────────────────────────────────────────────────────────────
+// -- Config ------------------------------------------------------------------
 
 interface Config {
   daemonUrl: string;
@@ -29,7 +29,7 @@ function readConfig(): Config {
   };
 }
 
-// ── Wire ────────────────────────────────────────────────────────────────────
+// -- Wire --------------------------------------------------------------------
 
 async function emit(payload: Record<string, unknown>): Promise<void> {
   const cfg = readConfig();
@@ -54,7 +54,7 @@ function metadata(): Record<string, unknown> {
   };
 }
 
-// ── Activate ────────────────────────────────────────────────────────────────
+// -- Activate ----------------------------------------------------------------
 
 export function activate(ctx: vscode.ExtensionContext): void {
   console.log("[tribunal] extension active; daemon =", readConfig().daemonUrl);
@@ -76,7 +76,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
     }),
   );
 
-  // Document changes — sampled, not every keystroke. We summarise per
+  // Document changes -- sampled, not every keystroke. We summarise per
   // editor activation rather than per character to keep volume sane.
   let lastActiveDoc = "";
   ctx.subscriptions.push(
@@ -118,7 +118,7 @@ export function activate(ctx: vscode.ExtensionContext): void {
         const r = await fetch(`${cfg.daemonUrl.replace(/\/$/, "")}/v1/health`);
         const body = await r.json();
         void vscode.window.showInformationMessage(
-          `Tribunal daemon ${body.version} — ${body.events} events`,
+          `Tribunal daemon ${body.version} -- ${body.events} events`,
         );
       } catch (err) {
         void vscode.window.showErrorMessage(`Tribunal daemon unreachable: ${err}`);

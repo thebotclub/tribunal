@@ -37,7 +37,7 @@ When exceeded, Tribunal will block further operations.
 
 ## Cost Optimization Tips
 
-1. **Use cheaper models for simple tasks** — Haiku for formatting, Opus for architecture
-2. **Be specific in prompts** — Less back-and-forth means fewer tokens
-3. **Batch related changes** — One session for related work
-4. **Review before running** — Check plans before execution to avoid rework
+1. **Use cheaper models for simple tasks** -- Haiku for formatting, Opus for architecture
+2. **Be specific in prompts** -- Less back-and-forth means fewer tokens
+3. **Batch related changes** -- One session for related work
+4. **Review before running** -- Check plans before execution to avoid rework

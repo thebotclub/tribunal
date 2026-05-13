@@ -21,7 +21,7 @@ rules:
     action: deny
     message: |
       A single cost.recorded event came in at $50+. Either a model
-      misconfig or an agent loop — blocking further activity until
+      misconfig or an agent loop -- blocking further activity until
       reviewed.
 
   - id: soc2/warn-external-fetch

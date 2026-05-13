@@ -1,4 +1,4 @@
-"""Tribunal unified event types — schema validation and local/cloud storage.
+"""Tribunal unified event types -- schema validation and local/cloud storage.
 
 This package owns the canonical event format. The JSON Schema lives at
 ``tribunal/spec/event-schema-v1.json``. Everything in this package treats

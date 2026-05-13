@@ -1,4 +1,4 @@
-"""Secret detection checker — finds hardcoded credentials in source files.
+"""Secret detection checker -- finds hardcoded credentials in source files.
 
 Scans file content against known secret patterns (AWS keys, API tokens,
 private keys, database URLs, etc.). Supports .secretsignore for
@@ -12,7 +12,7 @@ from pathlib import Path
 
 from . import CheckResult, Finding, register_global
 
-# ── Patterns ──────────────────────────────────────────────────────────────────
+# -- Patterns ------------------------------------------------------------------
 
 SECRET_PATTERNS: list[tuple[str, str]] = [
     # AWS
@@ -54,7 +54,7 @@ SECRET_PATTERNS: list[tuple[str, str]] = [
 
 _COMPILED_PATTERNS = [(re.compile(pat), rule_id) for pat, rule_id in SECRET_PATTERNS]
 
-# ── Skip lists ────────────────────────────────────────────────────────────────
+# -- Skip lists ----------------------------------------------------------------
 
 SKIP_EXTENSIONS = {
     ".png",
@@ -96,7 +96,7 @@ SKIP_FILENAMES = {
     "go.sum",
 }
 
-# ── Placeholder detection ─────────────────────────────────────────────────────
+# -- Placeholder detection -----------------------------------------------------
 
 _PLACEHOLDER_RE = re.compile(
     r"your[-_]?(api[-_]?key|token|secret|password)"
@@ -117,7 +117,7 @@ def _is_placeholder(value: str) -> bool:
     return bool(_PLACEHOLDER_RE.search(value))
 
 
-# ── .secretsignore ────────────────────────────────────────────────────────────
+# -- .secretsignore ------------------------------------------------------------
 
 
 def _load_secretsignore(project_root: Path) -> list[re.Pattern[str]]:
@@ -143,7 +143,7 @@ def _is_ignored(text: str, patterns: list[re.Pattern[str]]) -> bool:
     return any(p.search(text) for p in patterns)
 
 
-# ── Checker ───────────────────────────────────────────────────────────────────
+# -- Checker -------------------------------------------------------------------
 
 
 @register_global

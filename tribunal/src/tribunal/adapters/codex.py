@@ -1,4 +1,4 @@
-"""OpenAI Codex CLI adapter — translate codex CLI events to v1 events.
+"""OpenAI Codex CLI adapter -- translate codex CLI events to v1 events.
 
 OpenAI's ``codex`` CLI (the open-source TypeScript repl, sibling of
 ChatGPT's agentic interpreter) emits structured JSON to ``--log-json``.
@@ -55,7 +55,7 @@ def _common(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-# ── Translators ─────────────────────────────────────────────────────────────
+# -- Translators -------------------------------------------------------------
 
 
 def on_session_start(payload: Mapping[str, Any], emit: Emit) -> None:
@@ -164,7 +164,7 @@ def on_usage(payload: Mapping[str, Any], emit: Emit) -> None:
     )
 
 
-# ── Dispatcher ──────────────────────────────────────────────────────────────
+# -- Dispatcher --------------------------------------------------------------
 
 
 KIND_MAP: dict[str, Callable[[Mapping[str, Any], Emit], None]] = {

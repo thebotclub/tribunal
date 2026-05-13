@@ -1,4 +1,4 @@
-"""Rule engine — evaluates project rules against hook events.
+"""Rule engine -- evaluates project rules against hook events.
 
 Rules are defined in .tribunal/rules.yaml and evaluated in order.
 Each rule has a trigger (hook event), match conditions, and an action.
@@ -162,7 +162,7 @@ class RuleEngine:
 
         blocking = [r for r in results if r.blocked]
         if blocking:
-            reasons = "\n".join(f"⛔ [{r.rule.name}] {r.message}" for r in blocking)
+            reasons = "\n".join(f"[blocked] [{r.rule.name}] {r.message}" for r in blocking)
             return HookVerdict(
                 allow=False,
                 reason=f"Tribunal blocked this operation:\n{reasons}",
@@ -170,13 +170,13 @@ class RuleEngine:
 
         warnings = [r for r in results if r.triggered and not r.blocked]
         if warnings:
-            context = "\n".join(f"⚠️ [{r.rule.name}] {r.message}" for r in warnings)
+            context = "\n".join(f"[!] [{r.rule.name}] {r.message}" for r in warnings)
             return HookVerdict(allow=True, additional_context=context)
 
         return HookVerdict(allow=True)
 
 
-# ── Built-in Conditions ──────────────────────────────────────────────────────
+# -- Built-in Conditions ------------------------------------------------------
 
 
 def _check_condition(rule: Rule, event: HookEvent) -> tuple[bool, str]:
@@ -301,7 +301,7 @@ def _condition_run_command(rule: Rule, event: HookEvent) -> tuple[bool, str]:
             timeout=30,
         )
         if result.returncode == 127:
-            return False, ""  # Command not found — skip gracefully
+            return False, ""  # Command not found -- skip gracefully
         if result.returncode != 0:
             output = (result.stdout + result.stderr).strip()
             if len(output) > 500:
@@ -393,7 +393,7 @@ def _condition_type_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return True, "TypeScript type-check timed out after 60s"
     except FileNotFoundError:
         sys.stderr.write(
-            "tribunal: WARNING: 'npx tsc' not found — type-check rule skipped\n"
+            "tribunal: WARNING: 'npx tsc' not found -- type-check rule skipped\n"
         )
         if rule.require_tool:
             return True, "Rule requires 'tsc' but it's not installed."
@@ -436,7 +436,7 @@ def _condition_lint_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
             "eslint" if file_path.endswith((".ts", ".tsx", ".js", ".jsx")) else "ruff"
         )
         sys.stderr.write(
-            f"tribunal: WARNING: '{linter}' not found — lint-check rule skipped\n"
+            f"tribunal: WARNING: '{linter}' not found -- lint-check rule skipped\n"
         )
         if rule.require_tool:
             return True, f"Rule requires '{linter}' but it's not installed."
@@ -471,7 +471,7 @@ def _condition_mypy_check(rule: Rule, event: HookEvent) -> tuple[bool, str]:
         return True, "mypy check timed out after 60s"
     except FileNotFoundError:
         sys.stderr.write(
-            "tribunal: WARNING: 'mypy' not found — mypy-check rule skipped\n"
+            "tribunal: WARNING: 'mypy' not found -- mypy-check rule skipped\n"
         )
         if rule.require_tool:
             return True, "Rule requires 'mypy' but it's not installed."
@@ -490,7 +490,7 @@ _CONDITIONS: dict[str, Any] = {
 }
 
 
-# ── Default Rules ─────────────────────────────────────────────────────────────
+# -- Default Rules -------------------------------------------------------------
 
 
 def _default_rules() -> list[Rule]:

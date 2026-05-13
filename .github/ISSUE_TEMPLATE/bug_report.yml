@@ -1,0 +1,47 @@
+name: Bug report
+description: Something is not working
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of the bug.
+      placeholder: When I run `tribunal init` on macOS 14, it fails with...
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimum steps to reproduce the issue. Code or a tiny repo is gold.
+      placeholder: |
+        1. `pipx install tribunal`
+        2. `cd /tmp && tribunal init`
+        3. See error
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: tribunal --version
+      placeholder: tribunal 3.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: OS / shell
+      placeholder: macOS 14.5 / zsh
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Output of `tribunal doctor`, daemon logs from `~/.tribunal/daemon.log`, or a stack trace.
+      render: shell

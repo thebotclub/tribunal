@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 [env.production]
 route = { pattern = "ingest.tribunal.dev/*", zone_name = "tribunal.dev" }
 
-# Bindings — fill these out with `wrangler` before first deploy.
+# Bindings -- fill these out with `wrangler` before first deploy.
 [[d1_databases]]
 binding = "DB"
 database_name = "tribunal-prod"

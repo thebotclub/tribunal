@@ -1,4 +1,4 @@
-"""Cursor adapter — translate Cursor IDE events to v1 unified events.
+"""Cursor adapter -- translate Cursor IDE events to v1 unified events.
 
 Cursor's hook model is different from Claude Code:
 
@@ -38,7 +38,7 @@ AGENT_ID = "cursor"
 Emit = Callable[[dict[str, Any]], None]
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+# -- Helpers ------------------------------------------------------------------
 
 
 def _machine_id() -> str:
@@ -71,7 +71,7 @@ def _common_fields(payload: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-# ── Translators ──────────────────────────────────────────────────────────────
+# -- Translators --------------------------------------------------------------
 
 
 def on_chat_open(payload: Mapping[str, Any], emit: Emit) -> None:
@@ -213,7 +213,7 @@ def on_cost(payload: Mapping[str, Any], emit: Emit) -> None:
     )
 
 
-# ── Dispatcher ───────────────────────────────────────────────────────────────
+# -- Dispatcher ---------------------------------------------------------------
 
 
 TYPE_MAP: dict[str, Callable[[Mapping[str, Any], Emit], None]] = {
@@ -233,7 +233,7 @@ def translate(payload: Mapping[str, Any], emit: Emit) -> int:
     handler = TYPE_MAP.get(type_)
     counter = _Counter()
     if handler is None:
-        # Unknown type — emit as error.gate so the audit log doesn't
+        # Unknown type -- emit as error.gate so the audit log doesn't
         # silently lose data.
         counter(
             new_event(

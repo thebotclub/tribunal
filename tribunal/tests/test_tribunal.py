@@ -9,7 +9,7 @@ from tribunal.rules import Rule, RuleEngine, RuleMatch, _extract_path
 from tribunal.audit import log_event
 
 
-# ── Protocol Tests ────────────────────────────────────────────────────────────
+# -- Protocol Tests ------------------------------------------------------------
 
 
 class TestHookEvent:
@@ -73,7 +73,7 @@ class TestReadHookEvent:
         assert event.hook_event_name == "Unknown"
 
 
-# ── Rule Matching Tests ───────────────────────────────────────────────────────
+# -- Rule Matching Tests -------------------------------------------------------
 
 
 class TestRuleMatch:
@@ -133,7 +133,7 @@ class TestRuleMatch:
         assert m.matches(event)
 
 
-# ── Extract Path Tests ────────────────────────────────────────────────────────
+# -- Extract Path Tests --------------------------------------------------------
 
 
 class TestExtractPath:
@@ -168,7 +168,7 @@ class TestExtractPath:
         assert _extract_path(event) is None
 
 
-# ── Rule Engine Tests ─────────────────────────────────────────────────────────
+# -- Rule Engine Tests ---------------------------------------------------------
 
 
 class TestRuleEngine:
@@ -317,7 +317,7 @@ rules:
         assert verdict.allow
 
 
-# ── TDD Condition Tests ───────────────────────────────────────────────────────
+# -- TDD Condition Tests -------------------------------------------------------
 
 
 class TestTDDCondition:
@@ -416,7 +416,7 @@ class TestTDDCondition:
         assert verdict.allow
 
 
-# ── Secret Detection Tests ────────────────────────────────────────────────────
+# -- Secret Detection Tests ----------------------------------------------------
 
 
 class TestSecretCondition:
@@ -473,7 +473,7 @@ class TestSecretCondition:
         assert verdict.allow
 
 
-# ── Audit Log Tests ───────────────────────────────────────────────────────────
+# -- Audit Log Tests -----------------------------------------------------------
 
 
 class TestAuditLog:
@@ -512,7 +512,7 @@ class TestAuditLog:
         assert entry["rule"] == "tdd-python"
 
 
-# ── CLI Init Tests ────────────────────────────────────────────────────────────
+# -- CLI Init Tests ------------------------------------------------------------
 
 
 class TestCLIInit:

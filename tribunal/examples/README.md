@@ -1,4 +1,4 @@
-# Tribunal — self-hosted examples
+# Tribunal -- self-hosted examples
 
 ## Docker Compose stack
 
@@ -12,7 +12,7 @@ That starts:
 
 - `postgres` on `:5432`
 - `tribunal` daemon on `:8088`
-- `caddy` reverse proxy on `:80`/`:443` (optional — comment it out if you have your own ingress)
+- `caddy` reverse proxy on `:80`/`:443` (optional -- comment it out if you have your own ingress)
 
 Each developer machine then runs the CLI against this daemon:
 
@@ -26,8 +26,8 @@ tribunal adapter cursor
 
 The `policies/` directory mounts read-only into the daemon at `/policies`. Two starter packs ship here:
 
-- **`starter.yaml`** — sensible defaults for any team. Deny `.env` writes, warn on `sudo`, ask before `git push` and `rm -rf`.
-- **`strict.yaml`** — for production-adjacent repos. Denies infra/prod writes, kubectl against prod contexts, and trips a $25/session kill switch.
+- **`starter.yaml`** -- sensible defaults for any team. Deny `.env` writes, warn on `sudo`, ask before `git push` and `rm -rf`.
+- **`strict.yaml`** -- for production-adjacent repos. Denies infra/prod writes, kubectl against prod contexts, and trips a $25/session kill switch.
 
 Combine with shipped packs (`secrets-readonly`, `no-prod-writes`, `soc2-baseline`) for layered defence.
 

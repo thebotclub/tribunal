@@ -1,6 +1,6 @@
 # Tribunal
 
-> ## Heading to v3 — the open audit and policy layer for coding agents
+> ## Heading to v3 -- the open audit and policy layer for coding agents
 >
 > Tribunal is being rebuilt around a single problem: **every team running
 > Claude Code, Cursor, Copilot CLI, and Codex CLI has four separate audit
@@ -9,9 +9,9 @@
 > underneath all of them. OSS-core (MIT), self-hostable, with a paid hosted
 > tier and a compliance tier.
 >
-> The v2 quality-gate features documented below still work — they’re moving
-> to a `tribunal scan` subcommand in 3.0 and remain supported. If you’re
-> here for CI checkers, you’re in the right place.
+> The v2 quality-gate features documented below still work -- they're moving
+> to a `tribunal scan` subcommand in 3.0 and remain supported. If you're
+> here for CI checkers, you're in the right place.
 >
 > Target: 3.0.0a1 in week 2, GA in week 9 of the v3 plan.
 
@@ -19,9 +19,9 @@
 
 **Quality gates for AI-generated code.** v2.0.1
 
-Tribunal scans code for secrets, enforces TDD, lints Python / TypeScript / Go, and outputs SARIF — in one command. Works everywhere: CI pipelines, pre-commit hooks, local dev. Agent-agnostic.
+Tribunal scans code for secrets, enforces TDD, lints Python / TypeScript / Go, and outputs SARIF -- in one command. Works everywhere: CI pipelines, pre-commit hooks, local dev. Agent-agnostic.
 
-> 5 checkers · SARIF 2.1.0 · GitHub Action · pre-commit hook
+> 5 checkers * SARIF 2.1.0 * GitHub Action * pre-commit hook
 
 ## Quick Start
 
@@ -123,7 +123,7 @@ test_fixtures/mock_keys.py
 
 ### Placeholder Detection
 
-Tribunal automatically skips placeholder values like `your-api-key-here`, `CHANGE_ME`, `xxxx`, and `TODO` patterns — only real secrets trigger findings.
+Tribunal automatically skips placeholder values like `your-api-key-here`, `CHANGE_ME`, `xxxx`, and `TODO` patterns -- only real secrets trigger findings.
 
 ## TDD Enforcement
 
@@ -190,29 +190,29 @@ REST endpoints: `/api/projects`, `/api/summary`, `/api/projects/{id}/audit|cost|
 
 Visual governance in the editor sidebar:
 
-- **Rules Tree** — See all rules with action icons
-- **Audit Tree** — Browse recent events
-- **Cost Tree** — Track budget usage
-- **Agents Tree** — Monitor sub-agents
-- **Status Bar** — Rule count and block count at a glance
+- **Rules Tree** -- See all rules with action icons
+- **Audit Tree** -- Browse recent events
+- **Cost Tree** -- Track budget usage
+- **Agents Tree** -- Monitor sub-agents
+- **Status Bar** -- Rule count and block count at a glance
 
 ## Architecture
 
 ```
 .tribunal/
-├── rules.yaml          # Rule definitions
-├── config.yaml         # Project configuration
-├── permissions.yaml    # Permission policies
-├── audit.jsonl         # Audit log (gitignored)
-├── state.json          # Cost tracking state (gitignored)
-├── skills/             # Custom skills
-└── bundle.json         # Air-gapped bundle (export)
+??? rules.yaml          # Rule definitions
+??? config.yaml         # Project configuration
+??? permissions.yaml    # Permission policies
+??? audit.jsonl         # Audit log (gitignored)
+??? state.json          # Cost tracking state (gitignored)
+??? skills/             # Custom skills
+??? bundle.json         # Air-gapped bundle (export)
 
 .claude/
-├── claudeconfig.json   # Hook wiring for Claude Code
-└── memory/             # Tribunal memory entries
-    ├── tribunal-rule-*.md
-    └── tribunal-session-*.md
+??? claudeconfig.json   # Hook wiring for Claude Code
+??? memory/             # Tribunal memory entries
+    ??? tribunal-rule-*.md
+    ??? tribunal-session-*.md
 ```
 
 ## License

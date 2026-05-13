@@ -1,4 +1,4 @@
-"""Phase 5 hardening tests — covers all previously untested modules.
+"""Phase 5 hardening tests -- covers all previously untested modules.
 
 Tests for: protocol, gate, audit (rotation), io (atomic writes),
 config (schema validation), memory (limits), analytics, airgap,
@@ -18,11 +18,11 @@ import pytest
 import yaml
 
 
-# ── Protocol Tests ────────────────────────────────────────────────────────────
+# -- Protocol Tests ------------------------------------------------------------
 
 
 class TestProtocol:
-    """Tests for protocol.py — JSON hook event parsing and verdict writing."""
+    """Tests for protocol.py -- JSON hook event parsing and verdict writing."""
 
     def test_read_hook_event_basic(self):
         from tribunal.protocol import read_hook_event
@@ -116,11 +116,11 @@ class TestProtocol:
         assert exc_info.value.code == 2
 
 
-# ── Gate Tests ────────────────────────────────────────────────────────────────
+# -- Gate Tests ----------------------------------------------------------------
 
 
 class TestGate:
-    """Tests for gate.py — fail-closed behavior and error handling."""
+    """Tests for gate.py -- fail-closed behavior and error handling."""
 
     def test_fail_exit_code_default_closed(self):
         from tribunal.gate import _fail_exit_code
@@ -194,11 +194,11 @@ class TestGate:
             assert exc_info.value.code == 0
 
 
-# ── IO Tests (Atomic Writes) ─────────────────────────────────────────────────
+# -- IO Tests (Atomic Writes) -------------------------------------------------
 
 
 class TestIO:
-    """Tests for io.py — atomic writes with file locking."""
+    """Tests for io.py -- atomic writes with file locking."""
 
     def test_atomic_write_json_creates_file(self):
         from tribunal.io import atomic_write_json, locked_read_json
@@ -258,11 +258,11 @@ class TestIO:
             assert data == complex_data
 
 
-# ── Audit Tests (Rotation) ───────────────────────────────────────────────────
+# -- Audit Tests (Rotation) ---------------------------------------------------
 
 
 class TestAuditRotation:
-    """Tests for audit.py — log rotation and stats."""
+    """Tests for audit.py -- log rotation and stats."""
 
     def test_rotate_small_file_skipped(self):
         from tribunal.audit import rotate_audit_log
@@ -363,11 +363,11 @@ class TestAuditRotation:
             assert audit_path.exists()
 
 
-# ── Config Validation Tests ───────────────────────────────────────────────────
+# -- Config Validation Tests ---------------------------------------------------
 
 
 class TestConfigValidation:
-    """Tests for config.py — schema validation."""
+    """Tests for config.py -- schema validation."""
 
     def test_valid_config(self):
         from tribunal.config import validate_config
@@ -456,12 +456,12 @@ class TestConfigValidation:
             assert not any("unknown trigger" in e for e in errors)
 
 
-# ── Memory Limit Tests ────────────────────────────────────────────────────────
+# -- Memory Limit Tests --------------------------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.memory archived in 2.0 pivot")
 class TestMemoryLimits:
-    """Tests for memory.py — file count and size limits."""
+    """Tests for memory.py -- file count and size limits."""
 
     def test_inject_memory_basic(self):
         from tribunal.memory import MemoryEntry, inject_memory
@@ -501,7 +501,7 @@ class TestMemoryLimits:
             for i in range(MAX_MEMORY_FILES):
                 (mem_dir / f"other-{i}.md").write_text("content")
 
-            # Now inject — should evict nothing (no tribunal files to evict)
+            # Now inject -- should evict nothing (no tribunal files to evict)
             entry = MemoryEntry(title="Overflow", content="test")
             with patch("sys.stderr"):
                 path = inject_memory(tmpdir, entry)
@@ -600,12 +600,12 @@ class TestMemoryLimits:
             assert "sess_abc" in content
 
 
-# ── Analytics Tests ───────────────────────────────────────────────────────────
+# -- Analytics Tests -----------------------------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.analytics archived in 2.0 pivot")
 class TestAnalytics:
-    """Tests for analytics.py — cost trends and anomaly detection."""
+    """Tests for analytics.py -- cost trends and anomaly detection."""
 
     def _setup_state(self, tmpdir, daily_costs):
         state_dir = Path(tmpdir) / ".tribunal"
@@ -709,12 +709,12 @@ class TestAnalytics:
             assert "Trend" in output
 
 
-# ── Airgap Bundle Tests ──────────────────────────────────────────────────────
+# -- Airgap Bundle Tests ------------------------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.airgap archived in 2.0 pivot")
 class TestAirgap:
-    """Tests for airgap.py — bundle creation, export, import, and validation."""
+    """Tests for airgap.py -- bundle creation, export, import, and validation."""
 
     def test_create_bundle_empty_project(self):
         from tribunal.airgap import create_bundle
@@ -835,12 +835,12 @@ class TestAirgap:
             assert "metadata" in d
 
 
-# ── Dashboard Tests ──────────────────────────────────────────────────────────
+# -- Dashboard Tests ----------------------------------------------------------
 
 
 @pytest.mark.skip(reason="tribunal.dashboard archived in 2.0 pivot")
 class TestDashboard:
-    """Tests for dashboard.py — stats computation and HTML report generation."""
+    """Tests for dashboard.py -- stats computation and HTML report generation."""
 
     def _make_events(self, count=10):
         events = []
@@ -934,11 +934,11 @@ class TestDashboard:
             assert "<html" in Path(path).read_text().lower()
 
 
-# ── Missing Tool Detection Tests ──────────────────────────────────────────────
+# -- Missing Tool Detection Tests ----------------------------------------------
 
 
 class TestMissingToolDetection:
-    """Tests for rules.py — warning when external tools are missing."""
+    """Tests for rules.py -- warning when external tools are missing."""
 
     def test_run_command_missing_tool_warns(self):
         from tribunal.rules import Rule, _condition_run_command
@@ -975,12 +975,12 @@ class TestMissingToolDetection:
         assert triggered is False
 
 
-# ── Cost Module Tests (atomic writes integration) ────────────────────────────
+# -- Cost Module Tests (atomic writes integration) ----------------------------
 
 
 @pytest.mark.skip(reason="tribunal.cost archived in 2.0 pivot")
 class TestCostAtomicWrites:
-    """Tests for cost.py — verify atomic write integration."""
+    """Tests for cost.py -- verify atomic write integration."""
 
     def test_save_and_load_state(self):
         from tribunal.cost import save_state, load_state
@@ -1008,7 +1008,7 @@ class TestCostAtomicWrites:
             assert budget.daily_usd == 20.0
 
 
-# ── Version Test ──────────────────────────────────────────────────────────────
+# -- Version Test --------------------------------------------------------------
 
 
 class TestVersion:

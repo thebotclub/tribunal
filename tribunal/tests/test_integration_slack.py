@@ -1,4 +1,4 @@
-"""Tests for tribunal.integrations.slack — webhook notifier."""
+"""Tests for tribunal.integrations.slack -- webhook notifier."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 from tribunal.integrations.slack import SlackNotifier
 
 
-# ── Disabled-by-default semantics ───────────────────────────────────────────
+# -- Disabled-by-default semantics -------------------------------------------
 
 
 def test_notifier_disabled_when_webhook_unset() -> None:
@@ -33,7 +33,7 @@ def test_from_env_reads_webhook(monkeypatch: pytest.MonkeyPatch) -> None:
     assert n.enabled is True
 
 
-# ── Queueing ────────────────────────────────────────────────────────────────
+# -- Queueing ----------------------------------------------------------------
 
 
 def test_policy_decision_enqueued_only_for_deny_or_ask() -> None:
@@ -78,7 +78,7 @@ def test_queue_caps_at_max() -> None:
     assert len(n._queue) == 3  # type: ignore[attr-defined]
 
 
-# ── Block Kit rendering ─────────────────────────────────────────────────────
+# -- Block Kit rendering -----------------------------------------------------
 
 
 def test_render_produces_block_kit_structure() -> None:
@@ -134,7 +134,7 @@ def test_render_truncates_long_batches() -> None:
     )
 
 
-# ── Flush is safe even on webhook failure ───────────────────────────────────
+# -- Flush is safe even on webhook failure -----------------------------------
 
 
 def test_flush_swallows_webhook_errors(monkeypatch: pytest.MonkeyPatch) -> None:
