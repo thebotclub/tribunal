@@ -1,0 +1,68 @@
+name: soc2-baseline
+version: 1
+description: >
+  Conservative baseline for SOC2-bound teams. Logs everything and blocks
+  the obvious "agent goes rogue" footguns. Pair with secrets-readonly
+  and no-prod-writes for full coverage.
+
+rules:
+  - id: soc2/warn-prompt-injection
+    when:
+      event_type: injection.suspected
+    action: warn
+    message: |
+      Possible prompt injection detected upstream. Review the tool call
+      that triggered this against the audit log.
+
+  - id: soc2/deny-cost-runaway
+    when:
+      event_type: cost.recorded
+      cost_gte: 50.0
+    action: deny
+    message: |
+      A single cost.recorded event came in at $50+. Either a model
+      misconfig or an agent loop — blocking further activity until
+      reviewed.
+
+  - id: soc2/warn-external-fetch
+    when:
+      event_type: tool.proposed
+      tool_name: [WebFetch, web_search]
+    action: warn
+    message: |
+      External fetch in progress. Audit log captures the URL.
+
+  - id: soc2/deny-sudo
+    when:
+      event_type: tool.proposed
+      tool_name: [Bash, shell]
+      command_match:
+        - "^\\s*sudo\\s"
+        - "\\s&&\\s*sudo\\s"
+        - ";\\s*sudo\\s"
+    action: deny
+    message: sudo escalation from an AI agent is blocked.
+
+  - id: soc2/deny-package-publish
+    when:
+      event_type: tool.proposed
+      tool_name: [Bash, shell]
+      command_match:
+        - "npm\\s+publish\\b"
+        - "yarn\\s+publish\\b"
+        - "pnpm\\s+publish\\b"
+        - "twine\\s+upload\\b"
+        - "cargo\\s+publish\\b"
+        - "gem\\s+push\\b"
+        - "docker\\s+push\\b"
+    action: deny
+    message: |
+      Publishing a package from an AI agent is blocked. Cut the release
+      from your own shell or CI.
+
+  - id: soc2/warn-mcp-call
+    when:
+      event_type: mcp.call.before
+    action: warn
+    message: |
+      MCP server call. Audit log captures server, method, and arguments.

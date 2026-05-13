@@ -1,0 +1,68 @@
+name: no-prod-writes
+version: 1
+description: >
+  Block agents from running destructive shell commands or writing to
+  protected files when the working repo or branch looks like production.
+
+rules:
+  - id: prod/no-force-push
+    when:
+      event_type: tool.proposed
+      tool_name: Bash
+      command_match:
+        - "git\\s+push\\s+(--force|-f)\\b"
+        - "git\\s+push\\s+.+\\s+(--force|-f)\\b"
+    action: deny
+    message: |
+      Force-pushing from an AI agent is blocked. If you really need to
+      rewrite history, do it yourself from your shell.
+
+  - id: prod/no-destructive-bash
+    when:
+      event_type: tool.proposed
+      tool_name: [Bash, shell]
+      command_match:
+        - "rm\\s+-rf\\s+/"
+        - "rm\\s+-rf\\s+~/"
+        - "rm\\s+-rf\\s+\\$HOME"
+        - "dd\\s+if=.+\\s+of=/dev/"
+        - "mkfs\\."
+        - "shred\\s+-"
+        - "shutdown\\b"
+        - "reboot\\b"
+    action: deny
+    message: Catastrophic shell command blocked.
+
+  - id: prod/ask-on-prod-branch-write
+    when:
+      event_type: file.write
+      path_match:
+        - "**/main/**"
+        - "**/prod/**"
+        - "**/production/**"
+    action: ask
+    message: |
+      About to write under a production-looking path. Confirm this is
+      intended before allowing the change.
+
+  - id: prod/warn-database-migration-write
+    when:
+      event_type: file.write
+      path_match:
+        - "**/migrations/**"
+        - "**/db/schema*.{sql,rb,py}"
+        - "**/alembic/versions/**"
+    action: warn
+    message: |
+      Database migration touched. Review carefully — these typically
+      need code review and a deploy window.
+
+  - id: prod/deny-direct-sql-drop
+    when:
+      event_type: bash.executed
+      command_match:
+        - "DROP\\s+TABLE\\b"
+        - "DROP\\s+DATABASE\\b"
+        - "TRUNCATE\\b"
+    action: deny
+    message: SQL drop/truncate from an AI agent is blocked.

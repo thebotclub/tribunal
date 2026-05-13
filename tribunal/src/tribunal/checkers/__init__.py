@@ -1,166 +1,59 @@
-"""Tribunal checkers — language-aware quality gates for AI-generated code.
+"""Back-compat shim — :mod:`tribunal.checkers` was renamed to :mod:`tribunal.scan` in v3.0.0a1.
 
-Each checker analyzes files and returns structured findings.
-Checkers are registered by file extension and run via run_checkers().
+External users importing ``from tribunal.checkers import ...`` keep working;
+internal code should import from ``tribunal.scan``.
+
+This shim re-exports the public API and forwards submodule imports so that
+``from tribunal.checkers.secrets import ...`` continues to function.
 """
 
 from __future__ import annotations
 
-from importlib import import_module
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Callable
+import importlib
+import sys
+import warnings
+
+from tribunal.scan import (  # noqa: F401 — re-export
+    CheckResult,
+    CheckerFunc,
+    Finding,
+    collect_files,
+    register,
+    register_global,
+    run_checkers,
+)
+
+# Make `tribunal.checkers.<sub>` resolve to `tribunal.scan.<sub>` without
+# having to physically duplicate the files. Each submodule is loaded the
+# first time it is referenced and aliased in ``sys.modules``.
+_SUBMODULES = ("go", "python", "secrets", "tdd", "typescript")
+
+for _sub in _SUBMODULES:
+    _full_old = f"{__name__}.{_sub}"
+    _full_new = f"tribunal.scan.{_sub}"
+    if _full_old not in sys.modules:
+        sys.modules[_full_old] = importlib.import_module(_full_new)
 
 
-@dataclass
-class Finding:
-    """A single issue found by a checker."""
-
-    checker: str  # e.g. "secrets", "python", "tdd"
-    file: str  # relative file path
-    line: int  # 1-based line number (0 if file-level)
-    severity: str  # "error", "warning", "info"
-    message: str  # human-readable description
-    rule_id: str  # machine-readable ID, e.g. "secrets/aws-key"
+def __getattr__(name: str):  # pragma: no cover - simple proxy
+    if name in _SUBMODULES:
+        return sys.modules[f"{__name__}.{name}"]
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
-@dataclass
-class CheckResult:
-    """Aggregated result from a single checker on a single file."""
+__all__ = [
+    "CheckResult",
+    "CheckerFunc",
+    "Finding",
+    "collect_files",
+    "register",
+    "register_global",
+    "run_checkers",
+]
 
-    checker: str
-    file: str
-    findings: list[Finding] = field(default_factory=list)
-
-    @property
-    def passed(self) -> bool:
-        return not any(f.severity == "error" for f in self.findings)
-
-
-# Type for checker functions: (file_path, project_root) -> CheckResult
-CheckerFunc = Callable[[Path, Path], CheckResult]
-
-# Registry: file extension -> list of checker functions
-_REGISTRY: dict[str, list[CheckerFunc]] = {}
-
-# Global checkers run on all files regardless of extension
-_GLOBAL_CHECKERS: list[CheckerFunc] = []
-
-
-def register(extensions: list[str]) -> Callable[[CheckerFunc], CheckerFunc]:
-    """Decorator to register a checker for given file extensions."""
-
-    def decorator(func: CheckerFunc) -> CheckerFunc:
-        for ext in extensions:
-            _REGISTRY.setdefault(ext, []).append(func)
-        return func
-
-    return decorator
-
-
-def register_global(func: CheckerFunc) -> CheckerFunc:
-    """Decorator to register a checker that runs on all files."""
-    _GLOBAL_CHECKERS.append(func)
-    return func
-
-
-def run_checkers(
-    files: list[Path],
-    project_root: Path,
-    *,
-    checkers: list[str] | None = None,
-) -> list[CheckResult]:
-    """Run all applicable checkers on a list of files.
-
-    Args:
-        files: Files to check.
-        project_root: Project root directory.
-        checkers: Optional list of checker names to run. None = all.
-
-    Returns:
-        List of CheckResult objects.
-    """
-    # Force registration of all checker modules.
-    for module in ("go", "python", "secrets", "tdd", "typescript"):
-        import_module(f"{__package__}.{module}")
-
-    results: list[CheckResult] = []
-
-    for file_path in files:
-        if not file_path.is_file():
-            continue
-
-        ext = file_path.suffix
-        applicable: list[CheckerFunc] = list(_GLOBAL_CHECKERS)
-        applicable.extend(_REGISTRY.get(ext, []))
-
-        for checker_fn in applicable:
-            checker_name = getattr(checker_fn, "_checker_name", checker_fn.__name__)
-            if checkers and checker_name not in checkers:
-                continue
-            result = checker_fn(file_path, project_root)
-            results.append(result)
-
-    return results
-
-
-def collect_files(
-    project_root: Path,
-    *,
-    paths: list[Path] | None = None,
-) -> list[Path]:
-    """Collect files to check.
-
-    If paths are given, return those. Otherwise walk project_root,
-    skipping common non-source directories.
-    """
-    if paths:
-        resolved = []
-        for p in paths:
-            full = p if p.is_absolute() else project_root / p
-            if full.is_file():
-                resolved.append(full)
-            elif full.is_dir():
-                resolved.extend(_walk_dir(full))
-        return resolved
-
-    return _walk_dir(project_root)
-
-
-_SKIP_DIRS = {
-    ".venv",
-    "venv",
-    "node_modules",
-    "__pycache__",
-    ".git",
-    "dist",
-    "build",
-    ".tox",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".ruff_cache",
-    "egg-info",
-    "_archive",
-}
-
-_SOURCE_EXTENSIONS = {
-    ".py",
-    ".ts",
-    ".tsx",
-    ".js",
-    ".jsx",
-    ".mjs",
-    ".mts",
-    ".go",
-}
-
-
-def _walk_dir(directory: Path) -> list[Path]:
-    """Walk a directory tree, returning source files."""
-    files: list[Path] = []
-    for item in sorted(directory.rglob("*")):
-        if any(part in _SKIP_DIRS for part in item.parts):
-            continue
-        if item.is_file() and item.suffix in _SOURCE_EXTENSIONS:
-            files.append(item)
-    return files
+warnings.warn(
+    "tribunal.checkers is deprecated; import from tribunal.scan instead. "
+    "This shim will be removed in v4.",
+    DeprecationWarning,
+    stacklevel=2,
+)

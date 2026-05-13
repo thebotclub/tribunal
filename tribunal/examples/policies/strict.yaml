@@ -1,0 +1,49 @@
+# Strict policy pack — for production-adjacent repos.
+#
+# Combines well with the shipped 'soc2-baseline' pack:
+#   tribunal policy enable soc2-baseline
+#   tribunal policy enable strict
+
+name: strict
+version: "1.0.0"
+description: For production-adjacent repos. Denies infra writes, requires approval for network calls.
+
+rules:
+  - id: no-prod-terraform-writes
+    effect: deny
+    message: "Edits to infra/prod must go through a human-reviewed PR."
+    match:
+      event_type: tool.proposed
+      tool_name: [edit_file, write_file, str_replace_editor]
+      path_match: ["infra/prod/**", "terraform/prod/**", "**/prod.tfvars"]
+
+  - id: no-kubectl-prod
+    effect: deny
+    message: "kubectl against prod contexts is not allowed from an agent session."
+    match:
+      event_type: tool.proposed
+      tool_name: Bash
+      command_match: "kubectl.*--context[= ]prod"
+
+  - id: ask-before-curl
+    effect: ask
+    message: "Outbound network call — confirm intent."
+    match:
+      event_type: tool.proposed
+      tool_name: Bash
+      command_match: "^\\s*(curl|wget|http)\\b"
+
+  - id: deny-prompt-injection-high
+    effect: deny
+    message: "High-severity prompt injection detected upstream."
+    match:
+      event_type: injection.suspected
+      payload_regex:
+        severity: "^high$"
+
+  - id: cost-cap-session-25usd
+    effect: deny
+    message: "Session cost cap exceeded — kill switch."
+    match:
+      event_type: cost.recorded
+      cost_gte: 25.0
