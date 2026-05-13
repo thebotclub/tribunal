@@ -42,8 +42,9 @@ serve = [
 
 [project.urls]
 Homepage = "https://tribunal.dev"
-Repository = "https://github.com/thebotclub/tribunal.dev"
-Documentation = "https://github.com/thebotclub/tribunal.dev/blob/main/tribunal/README.md"
+Repository = "https://github.com/thebotclub/tribunal"
+Documentation = "https://github.com/thebotclub/tribunal/blob/main/tribunal/README.md"
+Issues = "https://github.com/thebotclub/tribunal/issues"
 
 [project.scripts]
 tribunal = "tribunal.cli:main"

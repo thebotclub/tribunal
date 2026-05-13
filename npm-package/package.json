@@ -19,7 +19,7 @@
   ],
   "homepage": "https://tribunal.dev",
   "bugs": {
-    "url": "https://github.com/thebotclub/tribunal.dev/issues"
+    "url": "https://github.com/thebotclub/tribunal/issues"
   },
   "license": "MIT",
   "author": {
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/thebotclub/tribunal.dev.git",
+    "url": "git+https://github.com/thebotclub/tribunal.git",
     "directory": "npm-package"
   },
   "bin": {
